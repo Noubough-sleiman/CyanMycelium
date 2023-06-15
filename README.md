@@ -19,13 +19,13 @@ To get started with CyanMycelium and enhance your Blue Panda RTOS with AI capabi
 1. Clone the Blue Panda repository:
 
    ```shell
-   git clone https://github.com/your-username/BluePanda.git
+   git clone https://github.com/DotVision/BluePanda.git
    ```
 
 2. Clone the CyanMycelium repository and navigate to the project directory:
 
    ```shell
-   git clone https://github.com/your-username/CyanMycelium.git
+   git clone https://github.com/DotVision/CyanMycelium.git
    cd CyanMycelium
    ```
 
