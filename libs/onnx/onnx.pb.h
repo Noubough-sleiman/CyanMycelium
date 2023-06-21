@@ -3,7 +3,7 @@
 
 #ifndef PB_ONNX_ONNX_PB_H_INCLUDED
 #define PB_ONNX_ONNX_PB_H_INCLUDED
-#include <pb.h>
+#include "../nanopb/pb.h"
 
 #if PB_PROTO_HEADER_VERSION != 40
 #error Regenerate this file with the current version of nanopb generator.
@@ -141,6 +141,67 @@ typedef enum _onnx_TensorProto_DataLocation {
 } onnx_TensorProto_DataLocation;
 
 /* Struct definitions */
+/* Attributes
+
+ A named attribute containing either singular float, integer, string, graph,
+ and tensor values, or repeated float, integer, string, graph, and tensor values.
+ An AttributeProto MUST contain the name field, and *only one* of the
+ following content fields, effectively enforcing a C/C++ union equivalent. */
+typedef struct _onnx_AttributeProto {
+    /* The name field MUST be present for this version of the IR. */
+    char *name; /* namespace Attribute */
+    /* Exactly ONE of the following fields must be present for this version of the IR */
+    float *f; /* float */
+    int64_t *i; /* int */
+    pb_bytes_array_t *s; /* UTF-8 string */
+    struct _onnx_TensorProto *t; /* tensor value */
+    struct _onnx_GraphProto *g; /* graph */
+    pb_size_t floats_count;
+    float *floats; /* list of floats */
+    pb_size_t ints_count;
+    int64_t *ints; /* list of ints */
+    pb_size_t strings_count;
+    pb_bytes_array_t **strings; /* list of UTF-8 strings */
+    pb_size_t tensors_count;
+    struct _onnx_TensorProto *tensors; /* list of tensors */
+    pb_size_t graphs_count;
+    struct _onnx_GraphProto *graphs; /* list of graph */
+    /* A human-readable documentation for this attribute. Markdown is allowed. */
+    char *doc_string;
+    /* Do not use field below, it's deprecated.
+ optional ValueProto v = 12;         // value - subsumes everything but graph */
+    struct _onnx_TypeProto *tp; /* type proto */
+    pb_size_t type_protos_count;
+    struct _onnx_TypeProto *type_protos; /* list of type protos */
+    /* The type field MUST be present for this version of the IR.
+ For 0.0.1 versions of the IR, this field was not defined, and
+ implementations needed to use has_field heuristics to determine
+ which value field was in use.  For IR_VERSION 0.0.2 or later, this
+ field MUST be set and match the f|i|s|t|... field in use.  This
+ change was made to accommodate proto3 implementations. */
+    onnx_AttributeProto_AttributeType *type; /* discriminator that indicates which field below is in use */
+    /* if ref_attr_name is not empty, ref_attr_name is the attribute name in parent function.
+ In this case, this AttributeProto does not contain data, and it's a reference of attribute
+ in parent scope.
+ NOTE: This should ONLY be used in function (sub-graph). It's invalid to be used in main graph. */
+    char *ref_attr_name;
+    struct _onnx_SparseTensorProto *sparse_tensor; /* sparse tensor value */
+    pb_size_t sparse_tensors_count;
+    struct _onnx_SparseTensorProto *sparse_tensors; /* list of sparse tensors */
+} onnx_AttributeProto;
+
+/* Defines information on value, including the name, the type, and
+ the shape of the value. */
+typedef struct _onnx_ValueInfoProto {
+    /* This field MUST be present in this version of the IR. */
+    char *name; /* namespace Value */
+    /* This field MUST be present in this version of the IR for
+ inputs and outputs of the top-level graph. */
+    struct _onnx_TypeProto *type;
+    /* A human-readable documentation for this value. Markdown is allowed. */
+    char *doc_string;
+} onnx_ValueInfoProto;
+
 /* Nodes
 
  Computation graphs are made up of a DAG of nodes, which represent what is
@@ -149,69 +210,23 @@ typedef enum _onnx_TensorProto_DataLocation {
  For example, it can be a node of type "Conv" that takes in an image, a filter
  tensor and a bias tensor, and produces the convolved output. */
 typedef struct _onnx_NodeProto {
-    pb_callback_t input; /* namespace Value */
-    pb_callback_t output; /* namespace Value */
+    pb_size_t input_count;
+    char **input; /* namespace Value */
+    pb_size_t output_count;
+    char **output; /* namespace Value */
     /* An optional identifier for this node in a graph.
  This field MAY be absent in ths version of the IR. */
-    pb_callback_t name; /* namespace Node */
+    char *name; /* namespace Node */
     /* The symbolic identifier of the Operator to execute. */
-    pb_callback_t op_type; /* namespace Operator */
+    char *op_type; /* namespace Operator */
     /* Additional named attributes. */
-    pb_callback_t attribute;
+    pb_size_t attribute_count;
+    struct _onnx_AttributeProto *attribute;
     /* A human-readable documentation for this node. Markdown is allowed. */
-    pb_callback_t doc_string;
+    char *doc_string;
     /* The domain of the OperatorSet that specifies the operator named by op_type. */
-    pb_callback_t domain; /* namespace Domain */
+    char *domain; /* namespace Domain */
 } onnx_NodeProto;
-
-/* StringStringEntryProto follows the pattern for cross-proto-version maps.
- See https://developers.google.com/protocol-buffers/docs/proto3#maps */
-typedef struct _onnx_StringStringEntryProto {
-    pb_callback_t key;
-    pb_callback_t value;
-} onnx_StringStringEntryProto;
-
-typedef struct _onnx_TensorAnnotation {
-    pb_callback_t tensor_name;
-    /* <key, value> pairs to annotate tensor specified by <tensor_name> above.
- The keys used in the mapping below must be pre-defined in ONNX spec.
- For example, for 8-bit linear quantization case, 'SCALE_TENSOR', 'ZERO_POINT_TENSOR' will be pre-defined as
- quantization parameter keys. */
-    pb_callback_t quant_parameter_tensor_names;
-} onnx_TensorAnnotation;
-
-/* Graphs
-
- A graph defines the computational logic of a model and is comprised of a parameterized
- list of nodes that form a directed acyclic graph based on their inputs and outputs.
- This is the equivalent of the "network" or "graph" in many deep learning
- frameworks. */
-typedef struct _onnx_GraphProto {
-    /* The nodes in the graph, sorted topologically. */
-    pb_callback_t node;
-    /* The name of the graph. */
-    pb_callback_t name; /* namespace Graph */
-    /* A list of named tensor values, used to specify constant inputs of the graph.
- Each initializer (both TensorProto as well SparseTensorProto) MUST have a name.
- The name MUST be unique across both initializer and sparse_initializer,
- but the name MAY also appear in the input list. */
-    pb_callback_t initializer;
-    /* A human-readable documentation for this graph. Markdown is allowed. */
-    pb_callback_t doc_string;
-    /* The inputs and outputs of the graph. */
-    pb_callback_t input;
-    pb_callback_t output;
-    /* Information for the values in the graph. The ValueInfoProto.name's
- must be distinct. It is optional for a value to appear in value_info list. */
-    pb_callback_t value_info;
-    /* This field carries information to indicate the mapping among a tensor and its
- quantization parameter tensors. For example:
- For tensor 'a', it may have {'SCALE_TENSOR', 'a_scale'} and {'ZERO_POINT_TENSOR', 'a_zero_point'} annotated,
- which means, tensor 'a_scale' and tensor 'a_zero_point' are scale and zero point of tensor 'a' in the model. */
-    pb_callback_t quantization_annotation;
-    /* Initializers (see above) stored in sparse format. */
-    pb_callback_t sparse_initializer;
-} onnx_GraphProto;
 
 /* Training information
  TrainingInfoProto stores information for training a model.
@@ -246,8 +261,7 @@ typedef struct _onnx_TrainingInfoProto {
 
  By default, this field is an empty graph and its evaluation does not
  produce any output. Thus, no initializer would be changed by default. */
-    bool has_initialization;
-    onnx_GraphProto initialization;
+    struct _onnx_GraphProto *initialization;
     /* This field represents a training algorithm step. Given required inputs,
  it computes outputs to update initializers in its own or inference graph's
  initializer lists. In general, this field contains loss node, gradient node,
@@ -277,8 +291,7 @@ typedef struct _onnx_TrainingInfoProto {
  By default, this field is an empty graph and its evaluation does not
  produce any output. Evaluating the default training step never
  update any initializers. */
-    bool has_algorithm;
-    onnx_GraphProto algorithm;
+    struct _onnx_GraphProto *algorithm;
     /* This field specifies the bindings from the outputs of "initialization" to
  some initializers in "ModelProto.graph.initializer" and
  the "algorithm.initializer" in the same TrainingInfoProto.
@@ -286,7 +299,8 @@ typedef struct _onnx_TrainingInfoProto {
 
  By default, this field is empty and no initializer would be changed
  by the execution of "initialization". */
-    pb_callback_t initialization_binding;
+    pb_size_t initialization_binding_count;
+    struct _onnx_StringStringEntryProto *initialization_binding;
     /* Gradient-based training is usually an iterative procedure. In one gradient
  descent iteration, we apply
 
@@ -327,7 +341,8 @@ typedef struct _onnx_TrainingInfoProto {
 
  By default, this field is empty and no initializer would be changed
  by the execution of "algorithm". */
-    pb_callback_t update_binding;
+    pb_size_t update_binding_count;
+    struct _onnx_StringStringEntryProto *update_binding;
 } onnx_TrainingInfoProto;
 
 /* Models
@@ -339,31 +354,28 @@ typedef struct _onnx_TrainingInfoProto {
 typedef struct _onnx_ModelProto {
     /* The version of the IR this model targets. See Version enum above.
  This field MUST be present. */
-    bool has_ir_version;
-    int64_t ir_version;
+    int64_t *ir_version;
     /* The name of the framework or tool used to generate this model.
  This field SHOULD be present to indicate which implementation/tool/framework
  emitted the model. */
-    pb_callback_t producer_name;
+    char *producer_name;
     /* The version of the framework or tool used to generate this model.
  This field SHOULD be present to indicate which implementation/tool/framework
  emitted the model. */
-    pb_callback_t producer_version;
+    char *producer_version;
     /* Domain name of the model.
  We use reverse domain names as name space indicators. For example:
  `com.facebook.fair` or `com.microsoft.cognitiveservices`
 
  Together with `model_version` and GraphProto.name, this forms the unique identity of
  the graph. */
-    pb_callback_t domain;
+    char *domain;
     /* The version of the graph encoded. See Version enum below. */
-    bool has_model_version;
-    int64_t model_version;
+    int64_t *model_version;
     /* A human-readable documentation for this model. Markdown is allowed. */
-    pb_callback_t doc_string;
+    char *doc_string;
     /* The parameterized graph that is evaluated to execute the model. */
-    bool has_graph;
-    onnx_GraphProto graph;
+    struct _onnx_GraphProto *graph;
     /* The OperatorSets this model relies on.
  All ModelProtos MUST have at least one entry that
  specifies which version of the ONNX OperatorSet is
@@ -372,9 +384,11 @@ typedef struct _onnx_ModelProto {
  All nodes in the ModelProto's graph will bind against the operator
  with the same-domain/same-op_type operator with the HIGHEST version
  in the referenced operator sets. */
-    pb_callback_t opset_import;
+    pb_size_t opset_import_count;
+    struct _onnx_OperatorSetIdProto *opset_import;
     /* Named metadata values; keys should be distinct. */
-    pb_callback_t metadata_props;
+    pb_size_t metadata_props_count;
+    struct _onnx_StringStringEntryProto *metadata_props;
     /* Training-specific information. Sequentially executing all stored
  `TrainingInfoProto.algorithm`s and assigning their outputs following
  the corresponding `TrainingInfoProto.update_binding`s is one training
@@ -384,7 +398,8 @@ typedef struct _onnx_ModelProto {
  using `TrainingInfoProto.initialization_binding`s.
 
  If this field is empty, the training behavior of the model is undefined. */
-    pb_callback_t training_info;
+    pb_size_t training_info_count;
+    struct _onnx_TrainingInfoProto *training_info;
     /* A list of function protos local to the model.
 
  Name of the function "FunctionProto.name" should be unique within the domain "FunctionProto.domain".
@@ -401,31 +416,78 @@ typedef struct _onnx_ModelProto {
 
  One FunctionProto can reference other FunctionProto in the model, however, recursive reference
  is not allowed. */
-    pb_callback_t functions;
+    pb_size_t functions_count;
+    struct _onnx_FunctionProto *functions;
 } onnx_ModelProto;
 
-/* For very large tensors, we may want to store them in chunks, in which
- case the following fields will specify the segment that is stored in
- the current TensorProto. */
-typedef struct _onnx_TensorProto_Segment {
-    bool has_begin;
-    int64_t begin;
-    bool has_end;
-    int64_t end;
-} onnx_TensorProto_Segment;
+/* StringStringEntryProto follows the pattern for cross-proto-version maps.
+ See https://developers.google.com/protocol-buffers/docs/proto3#maps */
+typedef struct _onnx_StringStringEntryProto {
+    char *key;
+    char *value;
+} onnx_StringStringEntryProto;
+
+typedef struct _onnx_TensorAnnotation {
+    char *tensor_name;
+    /* <key, value> pairs to annotate tensor specified by <tensor_name> above.
+ The keys used in the mapping below must be pre-defined in ONNX spec.
+ For example, for 8-bit linear quantization case, 'SCALE_TENSOR', 'ZERO_POINT_TENSOR' will be pre-defined as
+ quantization parameter keys. */
+    pb_size_t quant_parameter_tensor_names_count;
+    struct _onnx_StringStringEntryProto *quant_parameter_tensor_names;
+} onnx_TensorAnnotation;
+
+/* Graphs
+
+ A graph defines the computational logic of a model and is comprised of a parameterized
+ list of nodes that form a directed acyclic graph based on their inputs and outputs.
+ This is the equivalent of the "network" or "graph" in many deep learning
+ frameworks. */
+typedef struct _onnx_GraphProto {
+    /* The nodes in the graph, sorted topologically. */
+    pb_size_t node_count;
+    struct _onnx_NodeProto *node;
+    /* The name of the graph. */
+    char *name; /* namespace Graph */
+    /* A list of named tensor values, used to specify constant inputs of the graph.
+ Each initializer (both TensorProto as well SparseTensorProto) MUST have a name.
+ The name MUST be unique across both initializer and sparse_initializer,
+ but the name MAY also appear in the input list. */
+    pb_size_t initializer_count;
+    struct _onnx_TensorProto *initializer;
+    /* A human-readable documentation for this graph. Markdown is allowed. */
+    char *doc_string;
+    /* The inputs and outputs of the graph. */
+    pb_size_t input_count;
+    struct _onnx_ValueInfoProto *input;
+    pb_size_t output_count;
+    struct _onnx_ValueInfoProto *output;
+    /* Information for the values in the graph. The ValueInfoProto.name's
+ must be distinct. It is optional for a value to appear in value_info list. */
+    pb_size_t value_info_count;
+    struct _onnx_ValueInfoProto *value_info;
+    /* This field carries information to indicate the mapping among a tensor and its
+ quantization parameter tensors. For example:
+ For tensor 'a', it may have {'SCALE_TENSOR', 'a_scale'} and {'ZERO_POINT_TENSOR', 'a_zero_point'} annotated,
+ which means, tensor 'a_scale' and tensor 'a_zero_point' are scale and zero point of tensor 'a' in the model. */
+    pb_size_t quantization_annotation_count;
+    struct _onnx_TensorAnnotation *quantization_annotation;
+    /* Initializers (see above) stored in sparse format. */
+    pb_size_t sparse_initializer_count;
+    struct _onnx_SparseTensorProto *sparse_initializer;
+} onnx_GraphProto;
 
 /* Tensors
 
  A serialized tensor value. */
 typedef struct _onnx_TensorProto {
     /* The shape of the tensor. */
-    pb_callback_t dims;
+    pb_size_t dims_count;
+    int64_t *dims;
     /* The data type of the tensor.
  This field MUST have a valid TensorProto.DataType value */
-    bool has_data_type;
-    int32_t data_type;
-    bool has_segment;
-    onnx_TensorProto_Segment segment;
+    int32_t *data_type;
+    struct _onnx_TensorProto_Segment *segment;
     /* For float and complex64 values
  Complex64 tensors are encoded as a single array of floats,
  with the real components appearing in odd numbered positions,
@@ -433,24 +495,28 @@ typedef struct _onnx_TensorProto {
  subsequent even numbered position. (e.g., [1.0 + 2.0i, 3.0 + 4.0i]
  is encoded as [1.0, 2.0 ,3.0 ,4.0]
  When this field is present, the data_type field MUST be FLOAT or COMPLEX64. */
-    pb_callback_t float_data;
+    pb_size_t float_data_count;
+    float *float_data;
     /* For int32, uint8, int8, uint16, int16, bool, float8, and float16 values
  float16 and float8 values must be bit-wise converted to an uint16_t prior
  to writing to the buffer.
  When this field is present, the data_type field MUST be
  INT32, INT16, INT8, UINT16, UINT8, BOOL, FLOAT16, BFLOAT16, FLOAT8E4M3FN, FLOAT8E4M3FNUZ, FLOAT8E5M2, FLOAT8E5M2FNUZ */
-    pb_callback_t int32_data;
+    pb_size_t int32_data_count;
+    int32_t *int32_data;
     /* For strings.
  Each element of string_data is a UTF-8 encoded Unicode
  string. No trailing null, no leading BOM. The protobuf "string"
  scalar type is not used to match ML community conventions.
  When this field is present, the data_type field MUST be STRING */
-    pb_callback_t string_data;
+    pb_size_t string_data_count;
+    pb_bytes_array_t **string_data;
     /* For int64.
  When this field is present, the data_type field MUST be INT64 */
-    pb_callback_t int64_data;
+    pb_size_t int64_data_count;
+    int64_t *int64_data;
     /* Optionally, a name for the tensor. */
-    pb_callback_t name; /* namespace Value */
+    char *name; /* namespace Value */
     /* Serializations can either use one of the fields above, or use this
  raw bytes field. The only exception is the string case, where one is
  required to store the content in the repeated bytes string_data field.
@@ -466,7 +532,7 @@ typedef struct _onnx_TensorProto {
  that in some cases (e.g. int data), protobuf does a better packing via
  variable length storage, and may lead to smaller binary footprint.
  When this field is present, the data_type field MUST NOT be STRING or UNDEFINED */
-    pb_callback_t raw_data;
+    pb_bytes_array_t *raw_data;
     /* For double
  Complex128 tensors are encoded as a single array of doubles,
  with the real components appearing in odd numbered positions,
@@ -474,13 +540,15 @@ typedef struct _onnx_TensorProto {
  subsequent even numbered position. (e.g., [1.0 + 2.0i, 3.0 + 4.0i]
  is encoded as [1.0, 2.0 ,3.0 ,4.0]
  When this field is present, the data_type field MUST be DOUBLE or COMPLEX128 */
-    pb_callback_t double_data;
+    pb_size_t double_data_count;
+    double *double_data;
     /* For uint64 and uint32 values
  When this field is present, the data_type field MUST be
  UINT32 or UINT64 */
-    pb_callback_t uint64_data;
+    pb_size_t uint64_data_count;
+    uint64_t *uint64_data;
     /* A human-readable documentation for this tensor. Markdown is allowed. */
-    pb_callback_t doc_string;
+    char *doc_string;
     /* Data can be stored inside the protobuf file using type-specific fields or raw_data.
  Alternatively, raw bytes data can be stored in an external file, using the external_data field.
  external_data stores key-value pairs describing data location. Recognized keys are:
@@ -490,11 +558,19 @@ typedef struct _onnx_TensorProto {
                          Offset values SHOULD be multiples 4096 (page size) to enable mmap support.
  - "length" (optional) - number of bytes containing data. Integer stored as string.
  - "checksum" (optional) - SHA1 digest of file specified in under 'location' key. */
-    pb_callback_t external_data;
+    pb_size_t external_data_count;
+    struct _onnx_StringStringEntryProto *external_data;
     /* If value not set, data is stored in raw_data (if set) otherwise in type-specified field. */
-    bool has_data_location;
-    onnx_TensorProto_DataLocation data_location;
+    onnx_TensorProto_DataLocation *data_location;
 } onnx_TensorProto;
+
+/* For very large tensors, we may want to store them in chunks, in which
+ case the following fields will specify the segment that is stored in
+ the current TensorProto. */
+typedef struct _onnx_TensorProto_Segment {
+    int64_t *begin;
+    int64_t *end;
+} onnx_TensorProto_Segment;
 
 /* A serialized sparse-tensor value */
 typedef struct _onnx_SparseTensorProto {
@@ -502,8 +578,7 @@ typedef struct _onnx_SparseTensorProto {
  The default-value is zero for numeric tensors, and empty-string for string tensors.
  values must have a non-empty name present which serves as a name for SparseTensorProto
  when used in sparse_initializer list. */
-    bool has_values;
-    onnx_TensorProto values;
+    struct _onnx_TensorProto *values;
     /* The indices of the non-default values, which may be stored in one of two formats.
  (a) Indices can be a tensor of shape [NNZ, rank] with the [i,j]-th value
  corresponding to the j-th index of the i-th value (in the values tensor).
@@ -514,51 +589,97 @@ typedef struct _onnx_SparseTensorProto {
  The indices must appear in ascending order without duplication.
  In the first format, the ordering is lexicographic-ordering:
  e.g., index-value [1,4] must appear before [2,1] */
-    bool has_indices;
-    onnx_TensorProto indices;
+    struct _onnx_TensorProto *indices;
     /* The shape of the underlying dense-tensor: [dim_1, dim_2, ... dim_rank] */
-    pb_callback_t dims;
+    pb_size_t dims_count;
+    int64_t *dims;
 } onnx_SparseTensorProto;
 
 /* Defines a tensor shape. A dimension can be either an integer value
  or a symbolic variable. A symbolic variable represents an unknown
  dimension. */
 typedef struct _onnx_TensorShapeProto {
-    pb_callback_t dim;
+    pb_size_t dim_count;
+    struct _onnx_TensorShapeProto_Dimension *dim;
 } onnx_TensorShapeProto;
 
 typedef struct _onnx_TensorShapeProto_Dimension {
     pb_size_t which_value;
     union {
-        int64_t dim_value;
-        pb_callback_t dim_param; /* namespace Shape */
+        int64_t *dim_value;
+        char *dim_param; /* namespace Shape */
     } value;
     /* Standard denotation can optionally be used to denote tensor
  dimensions with standard semantic descriptions to ensure
  that operations are applied to the correct axis of a tensor.
  Refer to https://github.com/onnx/onnx/blob/main/docs/DimensionDenotation.md#denotation-definition
  for pre-defined dimension denotations. */
-    pb_callback_t denotation;
+    char *denotation;
 } onnx_TensorShapeProto_Dimension;
+
+/* Types
+
+ The standard ONNX data types. */
+typedef struct _onnx_TypeProto {
+    pb_size_t which_value;
+    union {
+        /* The type of a tensor. */
+        struct _onnx_TypeProto_Tensor *tensor_type;
+        /* The type of a sequence. */
+        struct _onnx_TypeProto_Sequence *sequence_type;
+        /* The type of a map. */
+        struct _onnx_TypeProto_Map *map_type;
+        /* Type of the sparse tensor */
+        struct _onnx_TypeProto_SparseTensor *sparse_tensor_type;
+        /* The type of an optional. */
+        struct _onnx_TypeProto_Optional *optional_type;
+    } value;
+    /* An optional denotation can be used to denote the whole
+ type with a standard semantic description as to what is
+ stored inside. Refer to https://github.com/onnx/onnx/blob/main/docs/TypeDenotation.md#type-denotation-definition
+ for pre-defined type denotations. */
+    char *denotation;
+} onnx_TypeProto;
 
 typedef struct _onnx_TypeProto_Tensor {
     /* This field MUST NOT have the value of UNDEFINED
  This field MUST have a valid TensorProto.DataType value
  This field MUST be present for this version of the IR. */
-    bool has_elem_type;
-    int32_t elem_type;
-    bool has_shape;
-    onnx_TensorShapeProto shape;
+    int32_t *elem_type;
+    struct _onnx_TensorShapeProto *shape;
 } onnx_TypeProto_Tensor;
+
+/* repeated T */
+typedef struct _onnx_TypeProto_Sequence {
+    /* The type and optional shape of each element of the sequence.
+ This field MUST be present for this version of the IR. */
+    struct _onnx_TypeProto *elem_type;
+} onnx_TypeProto_Sequence;
+
+/* map<K,V> */
+typedef struct _onnx_TypeProto_Map {
+    /* This field MUST have a valid TensorProto.DataType value
+ This field MUST be present for this version of the IR.
+ This field MUST refer to an integral type ([U]INT{8|16|32|64}) or STRING */
+    int32_t *key_type;
+    /* This field MUST be present for this version of the IR. */
+    struct _onnx_TypeProto *value_type;
+} onnx_TypeProto_Map;
+
+/* wrapper for Tensor, Sequence, or Map */
+typedef struct _onnx_TypeProto_Optional {
+    /* The type and optional shape of the element wrapped.
+ This field MUST be present for this version of the IR.
+ Possible values correspond to OptionalProto.DataType enum */
+    struct _onnx_TypeProto *elem_type;
+} onnx_TypeProto_Optional;
 
 typedef struct _onnx_TypeProto_SparseTensor {
     /* This field MUST NOT have the value of UNDEFINED
  This field MUST have a valid TensorProto.DataType value
  This field MUST be present for this version of the IR. */
-    bool has_elem_type;
-    int32_t elem_type;
-    bool has_shape;
-    onnx_TensorShapeProto shape;
+    int32_t *elem_type;
+    struct _onnx_TensorShapeProto *shape;
 } onnx_TypeProto_SparseTensor;
 
 /* Operator Sets
@@ -569,153 +690,43 @@ typedef struct _onnx_OperatorSetIdProto {
  The empty string ("") or absence of this field implies the operator
  set that is defined as part of the ONNX specification.
  This field MUST be present in this version of the IR when referring to any other operator set. */
-    pb_callback_t domain;
+    char *domain;
     /* The version of the operator set being identified.
  This field MUST be present in this version of the IR. */
-    bool has_version;
-    int64_t version;
+    int64_t *version;
 } onnx_OperatorSetIdProto;
 
 typedef struct _onnx_FunctionProto {
     /* The name of the function, similar usage of op_type in OperatorProto.
  Combined with FunctionProto.domain, this forms the unique identity of
  the FunctionProto. */
-    pb_callback_t name;
+    char *name;
     /* The inputs and outputs of the function. */
-    pb_callback_t input;
-    pb_callback_t output;
+    pb_size_t input_count;
+    char **input;
+    pb_size_t output_count;
+    char **output;
     /* The attribute parameters of the function.
  It is for function parameters without default values. */
-    pb_callback_t attribute;
+    pb_size_t attribute_count;
+    char **attribute;
     /* The nodes in the function. */
-    pb_callback_t node;
+    pb_size_t node_count;
+    struct _onnx_NodeProto *node;
     /* A human-readable documentation for this function. Markdown is allowed. */
-    pb_callback_t doc_string;
-    pb_callback_t opset_import;
+    char *doc_string;
+    pb_size_t opset_import_count;
+    struct _onnx_OperatorSetIdProto *opset_import;
     /* The domain which this function belongs to. Combined with FunctionProto.name, this forms the unique identity of
  the FunctionProto. */
-    pb_callback_t domain;
+    char *domain;
     /* The attribute protos of the function.
  It is for function attributes with default values.
  A function attribute shall be represented either as
  a string attribute or an AttributeProto, not both. */
-    pb_callback_t attribute_proto;
+    pb_size_t attribute_proto_count;
+    struct _onnx_AttributeProto *attribute_proto;
 } onnx_FunctionProto;
-
-/* Attributes
-
- A named attribute containing either singular float, integer, string, graph,
- and tensor values, or repeated float, integer, string, graph, and tensor values.
- An AttributeProto MUST contain the name field, and *only one* of the
- following content fields, effectively enforcing a C/C++ union equivalent. */
-typedef struct _onnx_AttributeProto {
-    /* The name field MUST be present for this version of the IR. */
-    pb_callback_t name; /* namespace Attribute */
-    /* Exactly ONE of the following fields must be present for this version of the IR */
-    bool has_f;
-    float f; /* float */
-    bool has_i;
-    int64_t i; /* int */
-    pb_callback_t s; /* UTF-8 string */
-    bool has_t;
-    onnx_TensorProto t; /* tensor value */
-    bool has_g;
-    onnx_GraphProto g; /* graph */
-    pb_callback_t floats; /* list of floats */
-    pb_callback_t ints; /* list of ints */
-    pb_callback_t strings; /* list of UTF-8 strings */
-    pb_callback_t tensors; /* list of tensors */
-    pb_callback_t graphs; /* list of graph */
-    /* A human-readable documentation for this attribute. Markdown is allowed. */
-    pb_callback_t doc_string;
-    /* Do not use field below, it's deprecated.
- optional ValueProto v = 12;         // value - subsumes everything but graph */
-    bool has_tp;
-    onnx_TypeProto tp; /* type proto */
-    pb_callback_t type_protos; /* list of type protos */
-    /* The type field MUST be present for this version of the IR.
- For 0.0.1 versions of the IR, this field was not defined, and
- implementations needed to use has_field heuristics to determine
- which value field was in use.  For IR_VERSION 0.0.2 or later, this
- field MUST be set and match the f|i|s|t|... field in use.  This
- change was made to accommodate proto3 implementations. */
-    bool has_type;
-    onnx_AttributeProto_AttributeType type; /* discriminator that indicates which field below is in use */
-    /* if ref_attr_name is not empty, ref_attr_name is the attribute name in parent function.
- In this case, this AttributeProto does not contain data, and it's a reference of attribute
- in parent scope.
- NOTE: This should ONLY be used in function (sub-graph). It's invalid to be used in main graph. */
-    pb_callback_t ref_attr_name;
-    bool has_sparse_tensor;
-    onnx_SparseTensorProto sparse_tensor; /* sparse tensor value */
-    pb_callback_t sparse_tensors; /* list of sparse tensors */
-} onnx_AttributeProto;
-
-/* Defines information on value, including the name, the type, and
- the shape of the value. */
-typedef struct _onnx_ValueInfoProto {
-    /* This field MUST be present in this version of the IR. */
-    pb_callback_t name; /* namespace Value */
-    /* This field MUST be present in this version of the IR for
- inputs and outputs of the top-level graph. */
-    bool has_type;
-    onnx_TypeProto type;
-    /* A human-readable documentation for this value. Markdown is allowed. */
-    pb_callback_t doc_string;
-} onnx_ValueInfoProto;
-
-/* Types
-
- The standard ONNX data types. */
-typedef struct _onnx_TypeProto {
-    pb_size_t which_value;
-    union {
-        /* The type of a tensor. */
-        onnx_TypeProto_Tensor tensor_type;
-        /* The type of a sequence. */
-        onnx_TypeProto_Sequence sequence_type;
-        /* The type of a map. */
-        onnx_TypeProto_Map map_type;
-        /* Type of the sparse tensor */
-        onnx_TypeProto_SparseTensor sparse_tensor_type;
-        /* The type of an optional. */
-        onnx_TypeProto_Optional optional_type;
-    } value;
-    /* An optional denotation can be used to denote the whole
- type with a standard semantic description as to what is
- stored inside. Refer to https://github.com/onnx/onnx/blob/main/docs/TypeDenotation.md#type-denotation-definition
- for pre-defined type denotations. */
-    pb_callback_t denotation;
-} onnx_TypeProto;
-
-/* repeated T */
-typedef struct _onnx_TypeProto_Sequence {
-    /* The type and optional shape of each element of the sequence.
- This field MUST be present for this version of the IR. */
-    bool has_elem_type;
-    onnx_TypeProto elem_type;
-} onnx_TypeProto_Sequence;
-
-/* map<K,V> */
-typedef struct _onnx_TypeProto_Map {
-    /* This field MUST have a valid TensorProto.DataType value
- This field MUST be present for this version of the IR.
- This field MUST refer to an integral type ([U]INT{8|16|32|64}) or STRING */
-    bool has_key_type;
-    int32_t key_type;
-    /* This field MUST be present for this version of the IR. */
-    bool has_value_type;
-    onnx_TypeProto value_type;
-} onnx_TypeProto_Map;
-
-/* wrapper for Tensor, Sequence, or Map */
-typedef struct _onnx_TypeProto_Optional {
-    /* The type and optional shape of the element wrapped.
- This field MUST be present for this version of the IR.
- Possible values correspond to OptionalProto.DataType enum */
-    bool has_elem_type;
-    onnx_TypeProto elem_type;
-} onnx_TypeProto_Optional;
 
 
 #ifdef __cplusplus
@@ -768,123 +779,50 @@ extern "C" {
 
 
 /* Initializer values for message structs */
-#define onnx_AttributeProto_init_default         {{{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, false, onnx_TensorProto_init_default, false, onnx_GraphProto_init_default, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, onnx_TypeProto_init_default, {{NULL}, NULL}, false, _onnx_AttributeProto_AttributeType_MIN, {{NULL}, NULL}, false, onnx_SparseTensorProto_init_default, {{NULL}, NULL}}
-#define onnx_ValueInfoProto_init_default         {{{NULL}, NULL}, false, onnx_TypeProto_init_default, {{NULL}, NULL}}
-#define onnx_NodeProto_init_default              {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_TrainingInfoProto_init_default      {false, onnx_GraphProto_init_default, false, onnx_GraphProto_init_default, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_ModelProto_init_default             {false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, false, onnx_GraphProto_init_default, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_StringStringEntryProto_init_default {{{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_TensorAnnotation_init_default       {{{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_GraphProto_init_default             {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_TensorProto_init_default            {{{NULL}, NULL}, false, 0, false, onnx_TensorProto_Segment_init_default, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, _onnx_TensorProto_DataLocation_MIN}
-#define onnx_TensorProto_Segment_init_default    {false, 0, false, 0}
-#define onnx_SparseTensorProto_init_default      {false, onnx_TensorProto_init_default, false, onnx_TensorProto_init_default, {{NULL}, NULL}}
-#define onnx_TensorShapeProto_init_default       {{{NULL}, NULL}}
-#define onnx_TensorShapeProto_Dimension_init_default {0, {0}, {{NULL}, NULL}}
-#define onnx_TypeProto_init_default              {0, {onnx_TypeProto_Tensor_init_default}, {{NULL}, NULL}}
-#define onnx_TypeProto_Tensor_init_default       {false, 0, false, onnx_TensorShapeProto_init_default}
-#define onnx_TypeProto_Sequence_init_default     {false, onnx_TypeProto_init_default}
-#define onnx_TypeProto_Map_init_default          {false, 0, false, onnx_TypeProto_init_default}
-#define onnx_TypeProto_Optional_init_default     {false, onnx_TypeProto_init_default}
-#define onnx_TypeProto_SparseTensor_init_default {false, 0, false, onnx_TensorShapeProto_init_default}
-#define onnx_OperatorSetIdProto_init_default     {{{NULL}, NULL}, false, 0}
-#define onnx_FunctionProto_init_default          {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_AttributeProto_init_zero            {{{NULL}, NULL}, false, 0, false, 0, {{NULL}, NULL}, false, onnx_TensorProto_init_zero, false, onnx_GraphProto_init_zero, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, onnx_TypeProto_init_zero, {{NULL}, NULL}, false, _onnx_AttributeProto_AttributeType_MIN, {{NULL}, NULL}, false, onnx_SparseTensorProto_init_zero, {{NULL}, NULL}}
-#define onnx_ValueInfoProto_init_zero            {{{NULL}, NULL}, false, onnx_TypeProto_init_zero, {{NULL}, NULL}}
-#define onnx_NodeProto_init_zero                 {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_TrainingInfoProto_init_zero         {false, onnx_GraphProto_init_zero, false, onnx_GraphProto_init_zero, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_ModelProto_init_zero                {false, 0, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, 0, {{NULL}, NULL}, false, onnx_GraphProto_init_zero, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_StringStringEntryProto_init_zero    {{{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_TensorAnnotation_init_zero          {{{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_GraphProto_init_zero                {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
-#define onnx_TensorProto_init_zero               {{{NULL}, NULL}, false, 0, false, onnx_TensorProto_Segment_init_zero, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, false, _onnx_TensorProto_DataLocation_MIN}
-#define onnx_TensorProto_Segment_init_zero       {false, 0, false, 0}
-#define onnx_SparseTensorProto_init_zero         {false, onnx_TensorProto_init_zero, false, onnx_TensorProto_init_zero, {{NULL}, NULL}}
-#define onnx_TensorShapeProto_init_zero          {{{NULL}, NULL}}
-#define onnx_TensorShapeProto_Dimension_init_zero {0, {0}, {{NULL}, NULL}}
-#define onnx_TypeProto_init_zero                 {0, {onnx_TypeProto_Tensor_init_zero}, {{NULL}, NULL}}
-#define onnx_TypeProto_Tensor_init_zero          {false, 0, false, onnx_TensorShapeProto_init_zero}
-#define onnx_TypeProto_Sequence_init_zero        {false, onnx_TypeProto_init_zero}
-#define onnx_TypeProto_Map_init_zero             {false, 0, false, onnx_TypeProto_init_zero}
-#define onnx_TypeProto_Optional_init_zero        {false, onnx_TypeProto_init_zero}
-#define onnx_TypeProto_SparseTensor_init_zero    {false, 0, false, onnx_TensorShapeProto_init_zero}
-#define onnx_OperatorSetIdProto_init_zero        {{{NULL}, NULL}, false, 0}
-#define onnx_FunctionProto_init_zero             {{{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}, {{NULL}, NULL}}
+#define onnx_AttributeProto_init_default         {NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, NULL}
+#define onnx_ValueInfoProto_init_default         {NULL, NULL, NULL}
+#define onnx_NodeProto_init_default              {0, NULL, 0, NULL, NULL, NULL, 0, NULL, NULL, NULL}
+#define onnx_TrainingInfoProto_init_default      {NULL, NULL, 0, NULL, 0, NULL}
+#define onnx_ModelProto_init_default             {NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL}
+#define onnx_StringStringEntryProto_init_default {NULL, NULL}
+#define onnx_TensorAnnotation_init_default       {NULL, 0, NULL}
+#define onnx_GraphProto_init_default             {0, NULL, NULL, 0, NULL, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL}
+#define onnx_TensorProto_init_default            {0, NULL, NULL, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, 0, NULL, 0, NULL, NULL, 0, NULL, NULL}
+#define onnx_TensorProto_Segment_init_default    {NULL, NULL}
+#define onnx_SparseTensorProto_init_default      {NULL, NULL, 0, NULL}
+#define onnx_TensorShapeProto_init_default       {0, NULL}
+#define onnx_TensorShapeProto_Dimension_init_default {0, {NULL}, NULL}
+#define onnx_TypeProto_init_default              {0, {NULL}, NULL}
+#define onnx_TypeProto_Tensor_init_default       {NULL, NULL}
+#define onnx_TypeProto_Sequence_init_default     {NULL}
+#define onnx_TypeProto_Map_init_default          {NULL, NULL}
+#define onnx_TypeProto_Optional_init_default     {NULL}
+#define onnx_TypeProto_SparseTensor_init_default {NULL, NULL}
+#define onnx_OperatorSetIdProto_init_default     {NULL, NULL}
+#define onnx_FunctionProto_init_default          {NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL}
+#define onnx_AttributeProto_init_zero            {NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, 0, NULL, NULL, NULL, NULL, 0, NULL}
+#define onnx_ValueInfoProto_init_zero            {NULL, NULL, NULL}
+#define onnx_NodeProto_init_zero                 {0, NULL, 0, NULL, NULL, NULL, 0, NULL, NULL, NULL}
+#define onnx_TrainingInfoProto_init_zero         {NULL, NULL, 0, NULL, 0, NULL}
+#define onnx_ModelProto_init_zero                {NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL}
+#define onnx_StringStringEntryProto_init_zero    {NULL, NULL}
+#define onnx_TensorAnnotation_init_zero          {NULL, 0, NULL}
+#define onnx_GraphProto_init_zero                {0, NULL, NULL, 0, NULL, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL}
+#define onnx_TensorProto_init_zero               {0, NULL, NULL, NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, NULL, 0, NULL, 0, NULL, NULL, 0, NULL, NULL}
+#define onnx_TensorProto_Segment_init_zero       {NULL, NULL}
+#define onnx_SparseTensorProto_init_zero         {NULL, NULL, 0, NULL}
+#define onnx_TensorShapeProto_init_zero          {0, NULL}
+#define onnx_TensorShapeProto_Dimension_init_zero {0, {NULL}, NULL}
+#define onnx_TypeProto_init_zero                 {0, {NULL}, NULL}
+#define onnx_TypeProto_Tensor_init_zero          {NULL, NULL}
+#define onnx_TypeProto_Sequence_init_zero        {NULL}
+#define onnx_TypeProto_Map_init_zero             {NULL, NULL}
+#define onnx_TypeProto_Optional_init_zero        {NULL}
+#define onnx_TypeProto_SparseTensor_init_zero    {NULL, NULL}
+#define onnx_OperatorSetIdProto_init_zero        {NULL, NULL}
+#define onnx_FunctionProto_init_zero             {NULL, 0, NULL, 0, NULL, 0, NULL, 0, NULL, NULL, 0, NULL, NULL, 0, NULL}
 
 /* Field tags (for use in manual encoding/decoding) */
-#define onnx_NodeProto_input_tag                 1
-#define onnx_NodeProto_output_tag                2
-#define onnx_NodeProto_name_tag                  3
-#define onnx_NodeProto_op_type_tag               4
-#define onnx_NodeProto_attribute_tag             5
-#define onnx_NodeProto_doc_string_tag            6
-#define onnx_NodeProto_domain_tag                7
-#define onnx_StringStringEntryProto_key_tag      1
-#define onnx_StringStringEntryProto_value_tag    2
-#define onnx_TensorAnnotation_tensor_name_tag    1
-#define onnx_TensorAnnotation_quant_parameter_tensor_names_tag 2
-#define onnx_GraphProto_node_tag                 1
-#define onnx_GraphProto_name_tag                 2
-#define onnx_GraphProto_initializer_tag          5
-#define onnx_GraphProto_doc_string_tag           10
-#define onnx_GraphProto_input_tag                11
-#define onnx_GraphProto_output_tag               12
-#define onnx_GraphProto_value_info_tag           13
-#define onnx_GraphProto_quantization_annotation_tag 14
-#define onnx_GraphProto_sparse_initializer_tag   15
-#define onnx_TrainingInfoProto_initialization_tag 1
-#define onnx_TrainingInfoProto_algorithm_tag     2
-#define onnx_TrainingInfoProto_initialization_binding_tag 3
-#define onnx_TrainingInfoProto_update_binding_tag 4
-#define onnx_ModelProto_ir_version_tag           1
-#define onnx_ModelProto_producer_name_tag        2
-#define onnx_ModelProto_producer_version_tag     3
-#define onnx_ModelProto_domain_tag               4
-#define onnx_ModelProto_model_version_tag        5
-#define onnx_ModelProto_doc_string_tag           6
-#define onnx_ModelProto_graph_tag                7
-#define onnx_ModelProto_opset_import_tag         8
-#define onnx_ModelProto_metadata_props_tag       14
-#define onnx_ModelProto_training_info_tag        20
-#define onnx_ModelProto_functions_tag            25
-#define onnx_TensorProto_Segment_begin_tag       1
-#define onnx_TensorProto_Segment_end_tag         2
-#define onnx_TensorProto_dims_tag                1
-#define onnx_TensorProto_data_type_tag           2
-#define onnx_TensorProto_segment_tag             3
-#define onnx_TensorProto_float_data_tag          4
-#define onnx_TensorProto_int32_data_tag          5
-#define onnx_TensorProto_string_data_tag         6
-#define onnx_TensorProto_int64_data_tag          7
-#define onnx_TensorProto_name_tag                8
-#define onnx_TensorProto_raw_data_tag            9
-#define onnx_TensorProto_double_data_tag         10
-#define onnx_TensorProto_uint64_data_tag         11
-#define onnx_TensorProto_doc_string_tag          12
-#define onnx_TensorProto_external_data_tag       13
-#define onnx_TensorProto_data_location_tag       14
-#define onnx_SparseTensorProto_values_tag        1
-#define onnx_SparseTensorProto_indices_tag       2
-#define onnx_SparseTensorProto_dims_tag          3
-#define onnx_TensorShapeProto_dim_tag            1
-#define onnx_TensorShapeProto_Dimension_dim_value_tag 1
-#define onnx_TensorShapeProto_Dimension_dim_param_tag 2
-#define onnx_TensorShapeProto_Dimension_denotation_tag 3
-#define onnx_TypeProto_Tensor_elem_type_tag      1
-#define onnx_TypeProto_Tensor_shape_tag          2
-#define onnx_TypeProto_SparseTensor_elem_type_tag 1
-#define onnx_TypeProto_SparseTensor_shape_tag    2
-#define onnx_OperatorSetIdProto_domain_tag       1
-#define onnx_OperatorSetIdProto_version_tag      2
-#define onnx_FunctionProto_name_tag              1
-#define onnx_FunctionProto_input_tag             4
-#define onnx_FunctionProto_output_tag            5
-#define onnx_FunctionProto_attribute_tag         6
-#define onnx_FunctionProto_node_tag              7
-#define onnx_FunctionProto_doc_string_tag        8
-#define onnx_FunctionProto_opset_import_tag      9
-#define onnx_FunctionProto_domain_tag            10
-#define onnx_FunctionProto_attribute_proto_tag   11
 #define onnx_AttributeProto_name_tag             1
 #define onnx_AttributeProto_f_tag                2
 #define onnx_AttributeProto_i_tag                3
@@ -906,38 +844,111 @@ extern "C" {
 #define onnx_ValueInfoProto_name_tag             1
 #define onnx_ValueInfoProto_type_tag             2
 #define onnx_ValueInfoProto_doc_string_tag       3
+#define onnx_NodeProto_input_tag                 1
+#define onnx_NodeProto_output_tag                2
+#define onnx_NodeProto_name_tag                  3
+#define onnx_NodeProto_op_type_tag               4
+#define onnx_NodeProto_attribute_tag             5
+#define onnx_NodeProto_doc_string_tag            6
+#define onnx_NodeProto_domain_tag                7
+#define onnx_TrainingInfoProto_initialization_tag 1
+#define onnx_TrainingInfoProto_algorithm_tag     2
+#define onnx_TrainingInfoProto_initialization_binding_tag 3
+#define onnx_TrainingInfoProto_update_binding_tag 4
+#define onnx_ModelProto_ir_version_tag           1
+#define onnx_ModelProto_producer_name_tag        2
+#define onnx_ModelProto_producer_version_tag     3
+#define onnx_ModelProto_domain_tag               4
+#define onnx_ModelProto_model_version_tag        5
+#define onnx_ModelProto_doc_string_tag           6
+#define onnx_ModelProto_graph_tag                7
+#define onnx_ModelProto_opset_import_tag         8
+#define onnx_ModelProto_metadata_props_tag       14
+#define onnx_ModelProto_training_info_tag        20
+#define onnx_ModelProto_functions_tag            25
+#define onnx_StringStringEntryProto_key_tag      1
+#define onnx_StringStringEntryProto_value_tag    2
+#define onnx_TensorAnnotation_tensor_name_tag    1
+#define onnx_TensorAnnotation_quant_parameter_tensor_names_tag 2
+#define onnx_GraphProto_node_tag                 1
+#define onnx_GraphProto_name_tag                 2
+#define onnx_GraphProto_initializer_tag          5
+#define onnx_GraphProto_doc_string_tag           10
+#define onnx_GraphProto_input_tag                11
+#define onnx_GraphProto_output_tag               12
+#define onnx_GraphProto_value_info_tag           13
+#define onnx_GraphProto_quantization_annotation_tag 14
+#define onnx_GraphProto_sparse_initializer_tag   15
+#define onnx_TensorProto_dims_tag                1
+#define onnx_TensorProto_data_type_tag           2
+#define onnx_TensorProto_segment_tag             3
+#define onnx_TensorProto_float_data_tag          4
+#define onnx_TensorProto_int32_data_tag          5
+#define onnx_TensorProto_string_data_tag         6
+#define onnx_TensorProto_int64_data_tag          7
+#define onnx_TensorProto_name_tag                8
+#define onnx_TensorProto_raw_data_tag            9
+#define onnx_TensorProto_double_data_tag         10
+#define onnx_TensorProto_uint64_data_tag         11
+#define onnx_TensorProto_doc_string_tag          12
+#define onnx_TensorProto_external_data_tag       13
+#define onnx_TensorProto_data_location_tag       14
+#define onnx_TensorProto_Segment_begin_tag       1
+#define onnx_TensorProto_Segment_end_tag         2
+#define onnx_SparseTensorProto_values_tag        1
+#define onnx_SparseTensorProto_indices_tag       2
+#define onnx_SparseTensorProto_dims_tag          3
+#define onnx_TensorShapeProto_dim_tag            1
+#define onnx_TensorShapeProto_Dimension_dim_value_tag 1
+#define onnx_TensorShapeProto_Dimension_dim_param_tag 2
+#define onnx_TensorShapeProto_Dimension_denotation_tag 3
 #define onnx_TypeProto_tensor_type_tag           1
 #define onnx_TypeProto_sequence_type_tag         4
 #define onnx_TypeProto_map_type_tag              5
 #define onnx_TypeProto_sparse_tensor_type_tag    8
 #define onnx_TypeProto_optional_type_tag         9
 #define onnx_TypeProto_denotation_tag            6
+#define onnx_TypeProto_Tensor_elem_type_tag      1
+#define onnx_TypeProto_Tensor_shape_tag          2
 #define onnx_TypeProto_Sequence_elem_type_tag    1
 #define onnx_TypeProto_Map_key_type_tag          1
 #define onnx_TypeProto_Map_value_type_tag        2
 #define onnx_TypeProto_Optional_elem_type_tag    1
+#define onnx_TypeProto_SparseTensor_elem_type_tag 1
+#define onnx_TypeProto_SparseTensor_shape_tag    2
+#define onnx_OperatorSetIdProto_domain_tag       1
+#define onnx_OperatorSetIdProto_version_tag      2
+#define onnx_FunctionProto_name_tag              1
+#define onnx_FunctionProto_input_tag             4
+#define onnx_FunctionProto_output_tag            5
+#define onnx_FunctionProto_attribute_tag         6
+#define onnx_FunctionProto_node_tag              7
+#define onnx_FunctionProto_doc_string_tag        8
+#define onnx_FunctionProto_opset_import_tag      9
+#define onnx_FunctionProto_domain_tag            10
+#define onnx_FunctionProto_attribute_proto_tag   11
 
 /* Struct field encoding specification for nanopb */
 #define onnx_AttributeProto_FIELDLIST(X, a) \
-X(a, CALLBACK, OPTIONAL, STRING,   name,              1) \
-X(a, STATIC,   OPTIONAL, FLOAT,    f,                 2) \
-X(a, STATIC,   OPTIONAL, INT64,    i,                 3) \
-X(a, CALLBACK, OPTIONAL, BYTES,    s,                 4) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  t,                 5) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  g,                 6) \
-X(a, CALLBACK, REPEATED, FLOAT,    floats,            7) \
-X(a, CALLBACK, REPEATED, INT64,    ints,              8) \
-X(a, CALLBACK, REPEATED, BYTES,    strings,           9) \
-X(a, CALLBACK, REPEATED, MESSAGE,  tensors,          10) \
-X(a, CALLBACK, REPEATED, MESSAGE,  graphs,           11) \
-X(a, CALLBACK, OPTIONAL, STRING,   doc_string,       13) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  tp,               14) \
-X(a, CALLBACK, REPEATED, MESSAGE,  type_protos,      15) \
-X(a, STATIC,   OPTIONAL, UENUM,    type,             20) \
-X(a, CALLBACK, OPTIONAL, STRING,   ref_attr_name,    21) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  sparse_tensor,    22) \
-X(a, CALLBACK, REPEATED, MESSAGE,  sparse_tensors,   23)
-#define onnx_AttributeProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, STRING,   name,              1) \
+X(a, POINTER,  OPTIONAL, FLOAT,    f,                 2) \
+X(a, POINTER,  OPTIONAL, INT64,    i,                 3) \
+X(a, POINTER,  OPTIONAL, BYTES,    s,                 4) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  t,                 5) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  g,                 6) \
+X(a, POINTER,  REPEATED, FLOAT,    floats,            7) \
+X(a, POINTER,  REPEATED, INT64,    ints,              8) \
+X(a, POINTER,  REPEATED, BYTES,    strings,           9) \
+X(a, POINTER,  REPEATED, MESSAGE,  tensors,          10) \
+X(a, POINTER,  REPEATED, MESSAGE,  graphs,           11) \
+X(a, POINTER,  OPTIONAL, STRING,   doc_string,       13) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  tp,               14) \
+X(a, POINTER,  REPEATED, MESSAGE,  type_protos,      15) \
+X(a, POINTER,  OPTIONAL, UENUM,    type,             20) \
+X(a, POINTER,  OPTIONAL, STRING,   ref_attr_name,    21) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  sparse_tensor,    22) \
+X(a, POINTER,  REPEATED, MESSAGE,  sparse_tensors,   23)
+#define onnx_AttributeProto_CALLBACK NULL
 #define onnx_AttributeProto_DEFAULT NULL
 #define onnx_AttributeProto_t_MSGTYPE onnx_TensorProto
 #define onnx_AttributeProto_g_MSGTYPE onnx_GraphProto
@@ -949,31 +960,31 @@ X(a, CALLBACK, REPEATED, MESSAGE,  sparse_tensors,   23)
 #define onnx_AttributeProto_sparse_tensors_MSGTYPE onnx_SparseTensorProto
 
 #define onnx_ValueInfoProto_FIELDLIST(X, a) \
-X(a, CALLBACK, OPTIONAL, STRING,   name,              1) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  type,              2) \
-X(a, CALLBACK, OPTIONAL, STRING,   doc_string,        3)
-#define onnx_ValueInfoProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, STRING,   name,              1) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  type,              2) \
+X(a, POINTER,  OPTIONAL, STRING,   doc_string,        3)
+#define onnx_ValueInfoProto_CALLBACK NULL
 #define onnx_ValueInfoProto_DEFAULT NULL
 #define onnx_ValueInfoProto_type_MSGTYPE onnx_TypeProto
 
 #define onnx_NodeProto_FIELDLIST(X, a) \
-X(a, CALLBACK, REPEATED, STRING,   input,             1) \
-X(a, CALLBACK, REPEATED, STRING,   output,            2) \
-X(a, CALLBACK, OPTIONAL, STRING,   name,              3) \
-X(a, CALLBACK, OPTIONAL, STRING,   op_type,           4) \
-X(a, CALLBACK, REPEATED, MESSAGE,  attribute,         5) \
-X(a, CALLBACK, OPTIONAL, STRING,   doc_string,        6) \
-X(a, CALLBACK, OPTIONAL, STRING,   domain,            7)
-#define onnx_NodeProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  REPEATED, STRING,   input,             1) \
+X(a, POINTER,  REPEATED, STRING,   output,            2) \
+X(a, POINTER,  OPTIONAL, STRING,   name,              3) \
+X(a, POINTER,  OPTIONAL, STRING,   op_type,           4) \
+X(a, POINTER,  REPEATED, MESSAGE,  attribute,         5) \
+X(a, POINTER,  OPTIONAL, STRING,   doc_string,        6) \
+X(a, POINTER,  OPTIONAL, STRING,   domain,            7)
+#define onnx_NodeProto_CALLBACK NULL
 #define onnx_NodeProto_DEFAULT NULL
 #define onnx_NodeProto_attribute_MSGTYPE onnx_AttributeProto
 
 #define onnx_TrainingInfoProto_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  initialization,    1) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  algorithm,         2) \
-X(a, CALLBACK, REPEATED, MESSAGE,  initialization_binding,   3) \
-X(a, CALLBACK, REPEATED, MESSAGE,  update_binding,    4)
-#define onnx_TrainingInfoProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, MESSAGE,  initialization,    1) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  algorithm,         2) \
+X(a, POINTER,  REPEATED, MESSAGE,  initialization_binding,   3) \
+X(a, POINTER,  REPEATED, MESSAGE,  update_binding,    4)
+#define onnx_TrainingInfoProto_CALLBACK NULL
 #define onnx_TrainingInfoProto_DEFAULT NULL
 #define onnx_TrainingInfoProto_initialization_MSGTYPE onnx_GraphProto
 #define onnx_TrainingInfoProto_algorithm_MSGTYPE onnx_GraphProto
@@ -981,18 +992,18 @@ X(a, CALLBACK, REPEATED, MESSAGE,  update_binding,    4)
 #define onnx_TrainingInfoProto_update_binding_MSGTYPE onnx_StringStringEntryProto
 
 #define onnx_ModelProto_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, INT64,    ir_version,        1) \
-X(a, CALLBACK, OPTIONAL, STRING,   producer_name,     2) \
-X(a, CALLBACK, OPTIONAL, STRING,   producer_version,   3) \
-X(a, CALLBACK, OPTIONAL, STRING,   domain,            4) \
-X(a, STATIC,   OPTIONAL, INT64,    model_version,     5) \
-X(a, CALLBACK, OPTIONAL, STRING,   doc_string,        6) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  graph,             7) \
-X(a, CALLBACK, REPEATED, MESSAGE,  opset_import,      8) \
-X(a, CALLBACK, REPEATED, MESSAGE,  metadata_props,   14) \
-X(a, CALLBACK, REPEATED, MESSAGE,  training_info,    20) \
-X(a, CALLBACK, REPEATED, MESSAGE,  functions,        25)
-#define onnx_ModelProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, INT64,    ir_version,        1) \
+X(a, POINTER,  OPTIONAL, STRING,   producer_name,     2) \
+X(a, POINTER,  OPTIONAL, STRING,   producer_version,   3) \
+X(a, POINTER,  OPTIONAL, STRING,   domain,            4) \
+X(a, POINTER,  OPTIONAL, INT64,    model_version,     5) \
+X(a, POINTER,  OPTIONAL, STRING,   doc_string,        6) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  graph,             7) \
+X(a, POINTER,  REPEATED, MESSAGE,  opset_import,      8) \
+X(a, POINTER,  REPEATED, MESSAGE,  metadata_props,   14) \
+X(a, POINTER,  REPEATED, MESSAGE,  training_info,    20) \
+X(a, POINTER,  REPEATED, MESSAGE,  functions,        25)
+#define onnx_ModelProto_CALLBACK NULL
 #define onnx_ModelProto_DEFAULT NULL
 #define onnx_ModelProto_graph_MSGTYPE onnx_GraphProto
 #define onnx_ModelProto_opset_import_MSGTYPE onnx_OperatorSetIdProto
@@ -1001,29 +1012,29 @@ X(a, CALLBACK, REPEATED, MESSAGE,  functions,        25)
 #define onnx_ModelProto_functions_MSGTYPE onnx_FunctionProto
 
 #define onnx_StringStringEntryProto_FIELDLIST(X, a) \
-X(a, CALLBACK, OPTIONAL, STRING,   key,               1) \
-X(a, CALLBACK, OPTIONAL, STRING,   value,             2)
-#define onnx_StringStringEntryProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, STRING,   key,               1) \
+X(a, POINTER,  OPTIONAL, STRING,   value,             2)
+#define onnx_StringStringEntryProto_CALLBACK NULL
 #define onnx_StringStringEntryProto_DEFAULT NULL
 
 #define onnx_TensorAnnotation_FIELDLIST(X, a) \
-X(a, CALLBACK, OPTIONAL, STRING,   tensor_name,       1) \
-X(a, CALLBACK, REPEATED, MESSAGE,  quant_parameter_tensor_names,   2)
-#define onnx_TensorAnnotation_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, STRING,   tensor_name,       1) \
+X(a, POINTER,  REPEATED, MESSAGE,  quant_parameter_tensor_names,   2)
+#define onnx_TensorAnnotation_CALLBACK NULL
 #define onnx_TensorAnnotation_DEFAULT NULL
 #define onnx_TensorAnnotation_quant_parameter_tensor_names_MSGTYPE onnx_StringStringEntryProto
 
 #define onnx_GraphProto_FIELDLIST(X, a) \
-X(a, CALLBACK, REPEATED, MESSAGE,  node,              1) \
-X(a, CALLBACK, OPTIONAL, STRING,   name,              2) \
-X(a, CALLBACK, REPEATED, MESSAGE,  initializer,       5) \
-X(a, CALLBACK, OPTIONAL, STRING,   doc_string,       10) \
-X(a, CALLBACK, REPEATED, MESSAGE,  input,            11) \
-X(a, CALLBACK, REPEATED, MESSAGE,  output,           12) \
-X(a, CALLBACK, REPEATED, MESSAGE,  value_info,       13) \
-X(a, CALLBACK, REPEATED, MESSAGE,  quantization_annotation,  14) \
-X(a, CALLBACK, REPEATED, MESSAGE,  sparse_initializer,  15)
-#define onnx_GraphProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  REPEATED, MESSAGE,  node,              1) \
+X(a, POINTER,  OPTIONAL, STRING,   name,              2) \
+X(a, POINTER,  REPEATED, MESSAGE,  initializer,       5) \
+X(a, POINTER,  OPTIONAL, STRING,   doc_string,       10) \
+X(a, POINTER,  REPEATED, MESSAGE,  input,            11) \
+X(a, POINTER,  REPEATED, MESSAGE,  output,           12) \
+X(a, POINTER,  REPEATED, MESSAGE,  value_info,       13) \
+X(a, POINTER,  REPEATED, MESSAGE,  quantization_annotation,  14) \
+X(a, POINTER,  REPEATED, MESSAGE,  sparse_initializer,  15)
+#define onnx_GraphProto_CALLBACK NULL
 #define onnx_GraphProto_DEFAULT NULL
 #define onnx_GraphProto_node_MSGTYPE onnx_NodeProto
 #define onnx_GraphProto_initializer_MSGTYPE onnx_TensorProto
@@ -1034,61 +1045,61 @@ X(a, CALLBACK, REPEATED, MESSAGE,  sparse_initializer,  15)
 #define onnx_GraphProto_sparse_initializer_MSGTYPE onnx_SparseTensorProto
 
 #define onnx_TensorProto_FIELDLIST(X, a) \
-X(a, CALLBACK, REPEATED, INT64,    dims,              1) \
-X(a, STATIC,   OPTIONAL, INT32,    data_type,         2) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  segment,           3) \
-X(a, CALLBACK, REPEATED, FLOAT,    float_data,        4) \
-X(a, CALLBACK, REPEATED, INT32,    int32_data,        5) \
-X(a, CALLBACK, REPEATED, BYTES,    string_data,       6) \
-X(a, CALLBACK, REPEATED, INT64,    int64_data,        7) \
-X(a, CALLBACK, OPTIONAL, STRING,   name,              8) \
-X(a, CALLBACK, OPTIONAL, BYTES,    raw_data,          9) \
-X(a, CALLBACK, REPEATED, DOUBLE,   double_data,      10) \
-X(a, CALLBACK, REPEATED, UINT64,   uint64_data,      11) \
-X(a, CALLBACK, OPTIONAL, STRING,   doc_string,       12) \
-X(a, CALLBACK, REPEATED, MESSAGE,  external_data,    13) \
-X(a, STATIC,   OPTIONAL, UENUM,    data_location,    14)
-#define onnx_TensorProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  REPEATED, INT64,    dims,              1) \
+X(a, POINTER,  OPTIONAL, INT32,    data_type,         2) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  segment,           3) \
+X(a, POINTER,  REPEATED, FLOAT,    float_data,        4) \
+X(a, POINTER,  REPEATED, INT32,    int32_data,        5) \
+X(a, POINTER,  REPEATED, BYTES,    string_data,       6) \
+X(a, POINTER,  REPEATED, INT64,    int64_data,        7) \
+X(a, POINTER,  OPTIONAL, STRING,   name,              8) \
+X(a, POINTER,  OPTIONAL, BYTES,    raw_data,          9) \
+X(a, POINTER,  REPEATED, DOUBLE,   double_data,      10) \
+X(a, POINTER,  REPEATED, UINT64,   uint64_data,      11) \
+X(a, POINTER,  OPTIONAL, STRING,   doc_string,       12) \
+X(a, POINTER,  REPEATED, MESSAGE,  external_data,    13) \
+X(a, POINTER,  OPTIONAL, UENUM,    data_location,    14)
+#define onnx_TensorProto_CALLBACK NULL
 #define onnx_TensorProto_DEFAULT NULL
 #define onnx_TensorProto_segment_MSGTYPE onnx_TensorProto_Segment
 #define onnx_TensorProto_external_data_MSGTYPE onnx_StringStringEntryProto
 
 #define onnx_TensorProto_Segment_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, INT64,    begin,             1) \
-X(a, STATIC,   OPTIONAL, INT64,    end,               2)
+X(a, POINTER,  OPTIONAL, INT64,    begin,             1) \
+X(a, POINTER,  OPTIONAL, INT64,    end,               2)
 #define onnx_TensorProto_Segment_CALLBACK NULL
 #define onnx_TensorProto_Segment_DEFAULT NULL
 
 #define onnx_SparseTensorProto_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  values,            1) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  indices,           2) \
-X(a, CALLBACK, REPEATED, INT64,    dims,              3)
-#define onnx_SparseTensorProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, MESSAGE,  values,            1) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  indices,           2) \
+X(a, POINTER,  REPEATED, INT64,    dims,              3)
+#define onnx_SparseTensorProto_CALLBACK NULL
 #define onnx_SparseTensorProto_DEFAULT NULL
 #define onnx_SparseTensorProto_values_MSGTYPE onnx_TensorProto
 #define onnx_SparseTensorProto_indices_MSGTYPE onnx_TensorProto
 
 #define onnx_TensorShapeProto_FIELDLIST(X, a) \
-X(a, CALLBACK, REPEATED, MESSAGE,  dim,               1)
-#define onnx_TensorShapeProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  REPEATED, MESSAGE,  dim,               1)
+#define onnx_TensorShapeProto_CALLBACK NULL
 #define onnx_TensorShapeProto_DEFAULT NULL
 #define onnx_TensorShapeProto_dim_MSGTYPE onnx_TensorShapeProto_Dimension
 
 #define onnx_TensorShapeProto_Dimension_FIELDLIST(X, a) \
-X(a, STATIC,   ONEOF,    INT64,    (value,dim_value,value.dim_value),   1) \
-X(a, CALLBACK, ONEOF,    STRING,   (value,dim_param,value.dim_param),   2) \
-X(a, CALLBACK, OPTIONAL, STRING,   denotation,        3)
-#define onnx_TensorShapeProto_Dimension_CALLBACK pb_default_field_callback
+X(a, POINTER,  ONEOF,    INT64,    (value,dim_value,value.dim_value),   1) \
+X(a, POINTER,  ONEOF,    STRING,   (value,dim_param,value.dim_param),   2) \
+X(a, POINTER,  OPTIONAL, STRING,   denotation,        3)
+#define onnx_TensorShapeProto_Dimension_CALLBACK NULL
 #define onnx_TensorShapeProto_Dimension_DEFAULT NULL
 
 #define onnx_TypeProto_FIELDLIST(X, a) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (value,tensor_type,value.tensor_type),   1) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (value,sequence_type,value.sequence_type),   4) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (value,map_type,value.map_type),   5) \
-X(a, CALLBACK, OPTIONAL, STRING,   denotation,        6) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (value,sparse_tensor_type,value.sparse_tensor_type),   8) \
-X(a, STATIC,   ONEOF,    MESSAGE,  (value,optional_type,value.optional_type),   9)
-#define onnx_TypeProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  ONEOF,    MESSAGE,  (value,tensor_type,value.tensor_type),   1) \
+X(a, POINTER,  ONEOF,    MESSAGE,  (value,sequence_type,value.sequence_type),   4) \
+X(a, POINTER,  ONEOF,    MESSAGE,  (value,map_type,value.map_type),   5) \
+X(a, POINTER,  OPTIONAL, STRING,   denotation,        6) \
+X(a, POINTER,  ONEOF,    MESSAGE,  (value,sparse_tensor_type,value.sparse_tensor_type),   8) \
+X(a, POINTER,  ONEOF,    MESSAGE,  (value,optional_type,value.optional_type),   9)
+#define onnx_TypeProto_CALLBACK NULL
 #define onnx_TypeProto_DEFAULT NULL
 #define onnx_TypeProto_value_tensor_type_MSGTYPE onnx_TypeProto_Tensor
 #define onnx_TypeProto_value_sequence_type_MSGTYPE onnx_TypeProto_Sequence
@@ -1097,55 +1108,55 @@ X(a, STATIC,   ONEOF,    MESSAGE,  (value,optional_type,value.optional_type),   
 #define onnx_TypeProto_value_optional_type_MSGTYPE onnx_TypeProto_Optional
 
 #define onnx_TypeProto_Tensor_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, INT32,    elem_type,         1) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  shape,             2)
+X(a, POINTER,  OPTIONAL, INT32,    elem_type,         1) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  shape,             2)
 #define onnx_TypeProto_Tensor_CALLBACK NULL
 #define onnx_TypeProto_Tensor_DEFAULT NULL
 #define onnx_TypeProto_Tensor_shape_MSGTYPE onnx_TensorShapeProto
 
 #define onnx_TypeProto_Sequence_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  elem_type,         1)
+X(a, POINTER,  OPTIONAL, MESSAGE,  elem_type,         1)
 #define onnx_TypeProto_Sequence_CALLBACK NULL
 #define onnx_TypeProto_Sequence_DEFAULT NULL
 #define onnx_TypeProto_Sequence_elem_type_MSGTYPE onnx_TypeProto
 
 #define onnx_TypeProto_Map_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, INT32,    key_type,          1) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  value_type,        2)
+X(a, POINTER,  OPTIONAL, INT32,    key_type,          1) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  value_type,        2)
 #define onnx_TypeProto_Map_CALLBACK NULL
 #define onnx_TypeProto_Map_DEFAULT NULL
 #define onnx_TypeProto_Map_value_type_MSGTYPE onnx_TypeProto
 
 #define onnx_TypeProto_Optional_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  elem_type,         1)
+X(a, POINTER,  OPTIONAL, MESSAGE,  elem_type,         1)
 #define onnx_TypeProto_Optional_CALLBACK NULL
 #define onnx_TypeProto_Optional_DEFAULT NULL
 #define onnx_TypeProto_Optional_elem_type_MSGTYPE onnx_TypeProto
 
 #define onnx_TypeProto_SparseTensor_FIELDLIST(X, a) \
-X(a, STATIC,   OPTIONAL, INT32,    elem_type,         1) \
-X(a, STATIC,   OPTIONAL, MESSAGE,  shape,             2)
+X(a, POINTER,  OPTIONAL, INT32,    elem_type,         1) \
+X(a, POINTER,  OPTIONAL, MESSAGE,  shape,             2)
 #define onnx_TypeProto_SparseTensor_CALLBACK NULL
 #define onnx_TypeProto_SparseTensor_DEFAULT NULL
 #define onnx_TypeProto_SparseTensor_shape_MSGTYPE onnx_TensorShapeProto
 
 #define onnx_OperatorSetIdProto_FIELDLIST(X, a) \
-X(a, CALLBACK, OPTIONAL, STRING,   domain,            1) \
-X(a, STATIC,   OPTIONAL, INT64,    version,           2)
-#define onnx_OperatorSetIdProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, STRING,   domain,            1) \
+X(a, POINTER,  OPTIONAL, INT64,    version,           2)
+#define onnx_OperatorSetIdProto_CALLBACK NULL
 #define onnx_OperatorSetIdProto_DEFAULT NULL
 
 #define onnx_FunctionProto_FIELDLIST(X, a) \
-X(a, CALLBACK, OPTIONAL, STRING,   name,              1) \
-X(a, CALLBACK, REPEATED, STRING,   input,             4) \
-X(a, CALLBACK, REPEATED, STRING,   output,            5) \
-X(a, CALLBACK, REPEATED, STRING,   attribute,         6) \
-X(a, CALLBACK, REPEATED, MESSAGE,  node,              7) \
-X(a, CALLBACK, OPTIONAL, STRING,   doc_string,        8) \
-X(a, CALLBACK, REPEATED, MESSAGE,  opset_import,      9) \
-X(a, CALLBACK, OPTIONAL, STRING,   domain,           10) \
-X(a, CALLBACK, REPEATED, MESSAGE,  attribute_proto,  11)
-#define onnx_FunctionProto_CALLBACK pb_default_field_callback
+X(a, POINTER,  OPTIONAL, STRING,   name,              1) \
+X(a, POINTER,  REPEATED, STRING,   input,             4) \
+X(a, POINTER,  REPEATED, STRING,   output,            5) \
+X(a, POINTER,  REPEATED, STRING,   attribute,         6) \
+X(a, POINTER,  REPEATED, MESSAGE,  node,              7) \
+X(a, POINTER,  OPTIONAL, STRING,   doc_string,        8) \
+X(a, POINTER,  REPEATED, MESSAGE,  opset_import,      9) \
+X(a, POINTER,  OPTIONAL, STRING,   domain,           10) \
+X(a, POINTER,  REPEATED, MESSAGE,  attribute_proto,  11)
+#define onnx_FunctionProto_CALLBACK NULL
 #define onnx_FunctionProto_DEFAULT NULL
 #define onnx_FunctionProto_node_MSGTYPE onnx_NodeProto
 #define onnx_FunctionProto_opset_import_MSGTYPE onnx_OperatorSetIdProto
@@ -1206,6 +1217,7 @@ extern const pb_msgdesc_t onnx_FunctionProto_msg;
 /* onnx_TensorAnnotation_size depends on runtime parameters */
 /* onnx_GraphProto_size depends on runtime parameters */
 /* onnx_TensorProto_size depends on runtime parameters */
+/* onnx_TensorProto_Segment_size depends on runtime parameters */
 /* onnx_SparseTensorProto_size depends on runtime parameters */
 /* onnx_TensorShapeProto_size depends on runtime parameters */
 /* onnx_TensorShapeProto_Dimension_size depends on runtime parameters */
@@ -1217,7 +1229,6 @@ extern const pb_msgdesc_t onnx_FunctionProto_msg;
 /* onnx_TypeProto_SparseTensor_size depends on runtime parameters */
 /* onnx_OperatorSetIdProto_size depends on runtime parameters */
 /* onnx_FunctionProto_size depends on runtime parameters */
-#define onnx_TensorProto_Segment_size            22
 
 #ifdef __cplusplus
 } /* extern "C" */

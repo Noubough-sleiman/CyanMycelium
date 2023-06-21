@@ -9,16 +9,16 @@
 PB_BIND(onnx_AttributeProto, onnx_AttributeProto, 2)
 
 
-PB_BIND(onnx_ValueInfoProto, onnx_ValueInfoProto, 2)
+PB_BIND(onnx_ValueInfoProto, onnx_ValueInfoProto, AUTO)
 
 
 PB_BIND(onnx_NodeProto, onnx_NodeProto, AUTO)
 
 
-PB_BIND(onnx_TrainingInfoProto, onnx_TrainingInfoProto, 2)
+PB_BIND(onnx_TrainingInfoProto, onnx_TrainingInfoProto, AUTO)
 
 
-PB_BIND(onnx_ModelProto, onnx_ModelProto, 2)
+PB_BIND(onnx_ModelProto, onnx_ModelProto, AUTO)
 
 
 PB_BIND(onnx_StringStringEntryProto, onnx_StringStringEntryProto, AUTO)
@@ -30,13 +30,13 @@ PB_BIND(onnx_TensorAnnotation, onnx_TensorAnnotation, AUTO)
 PB_BIND(onnx_GraphProto, onnx_GraphProto, AUTO)
 
 
-PB_BIND(onnx_TensorProto, onnx_TensorProto, 2)
+PB_BIND(onnx_TensorProto, onnx_TensorProto, AUTO)
 
 
 PB_BIND(onnx_TensorProto_Segment, onnx_TensorProto_Segment, AUTO)
 
 
-PB_BIND(onnx_SparseTensorProto, onnx_SparseTensorProto, 2)
+PB_BIND(onnx_SparseTensorProto, onnx_SparseTensorProto, AUTO)
 
 
 PB_BIND(onnx_TensorShapeProto, onnx_TensorShapeProto, AUTO)
@@ -45,19 +45,19 @@ PB_BIND(onnx_TensorShapeProto, onnx_TensorShapeProto, AUTO)
 PB_BIND(onnx_TensorShapeProto_Dimension, onnx_TensorShapeProto_Dimension, AUTO)
 
 
-PB_BIND(onnx_TypeProto, onnx_TypeProto, 2)
+PB_BIND(onnx_TypeProto, onnx_TypeProto, AUTO)
 
 
 PB_BIND(onnx_TypeProto_Tensor, onnx_TypeProto_Tensor, AUTO)
 
 
-PB_BIND(onnx_TypeProto_Sequence, onnx_TypeProto_Sequence, 2)
+PB_BIND(onnx_TypeProto_Sequence, onnx_TypeProto_Sequence, AUTO)
 
 
-PB_BIND(onnx_TypeProto_Map, onnx_TypeProto_Map, 2)
+PB_BIND(onnx_TypeProto_Map, onnx_TypeProto_Map, AUTO)
 
 
-PB_BIND(onnx_TypeProto_Optional, onnx_TypeProto_Optional, 2)
+PB_BIND(onnx_TypeProto_Optional, onnx_TypeProto_Optional, AUTO)
 
 
 PB_BIND(onnx_TypeProto_SparseTensor, onnx_TypeProto_SparseTensor, AUTO)

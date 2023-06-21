@@ -1,10 +1,26 @@
 {
   "tasks": [
     {
-      "type": "cppbuild",
+      "label": "Compile",
+      "type": "shell",
+      "command": "g++",
+      "args": [
+        "-c",
+        "-I",
+        "${workspaceFolder}",
+        "-I",
+        "${workspaceFolder}\\lib\\nanopb\\",
+        "-c",
+        "${workspaceFolder}\\src\\decode_onnx.cpp"
+      ],
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "type": "cppcompile",
       "label": "C/C++: g++.exe build active file",
       "command": "C:\\msys64\\mingw64\\bin\\g++.exe",
       "args": [
+        "-c",
         "-fdiagnostics-color=always",
         "-g",
         "${file}",
