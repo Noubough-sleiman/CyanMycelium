@@ -11,7 +11,7 @@
  *****************************************************************/
 
 /* Enable support for dynamically allocated fields */
-/* #define PB_ENABLE_MALLOC 1 */
+#define PB_ENABLE_MALLOC 1 
 
 /* Define this if your CPU / compiler combination does not support
  * unaligned memory access to packed structures. Note that packed
@@ -81,15 +81,12 @@
 #ifdef PB_SYSTEM_HEADER
 #include PB_SYSTEM_HEADER
 #else
+#include <stdlib.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <string.h>
 #include <limits.h>
-
-#ifdef PB_ENABLE_MALLOC
-#include "../includes/osal/heap.h"
-#endif
 #endif
 
 #ifdef __cplusplus
@@ -474,12 +471,12 @@ struct pb_extension_s {
 /* Memory allocation functions to use. You can define pb_realloc and
  * pb_free to custom functions if you want. */
 #ifdef PB_ENABLE_MALLOC
-   ifndef pb_realloc
-       define pb_realloc(ptr, size) cm_realloc(ptr, size, INTERNAL_HEAP)
-   endif
-   ifndef pb_free
-       define pb_free(ptr) cm_free(ptr)
-   endif
+    #ifndef pb_realloc
+       #define pb_realloc(ptr, size) realloc(ptr, size)
+   #endif
+   #ifndef pb_free
+       #define pb_free(ptr) free(ptr)
+   #endif
 #endif
 
 /* This is used to inform about need to regenerate .pb.h/.pb.c files. */

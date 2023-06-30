@@ -12,6 +12,8 @@ extern "C" {
 #define GRAPH_INPUT_SIZE 8
 #define GRAPH_OUTPUT_SIZE 8
 
+#define FILE_ACCESS_MAX_READ_PER_CALLBACK 8
+
 typedef uint16_t cm_size_t;
 typedef uint16_t session_id_t;
 

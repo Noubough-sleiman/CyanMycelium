@@ -30,13 +30,13 @@ $(OUTPUT) : $(OBJECTS)
 	$(COMPILER) $(CFLAGS) $(OBJECTS) -o $(OUTPUT)
 
 $(PB_DIR)$/pb_common.o : $(PB_DIR)$/pb_common.c $(PB_DIR)$/pb_common.h $(PB_DIR)$/pb.h
-	$(COMPILER) $(CFLAGS) -I $(PB_DIR) -c $(PB_DIR)$/pb_common.c -o $(PB_DIR)$/pb_common.o 
+	$(COMPILER) $(CFLAGS) -I $(PB_DIR) -I $(HEADER_DIR) -c $(PB_DIR)$/pb_common.c -o $(PB_DIR)$/pb_common.o 
 
 $(PB_DIR)$/pb_decode.o : $(PB_DIR)$/pb_decode.c $(PB_DIR)$/pb_decode.h $(PB_DIR)$/pb.h
-	$(COMPILER) $(CFLAGS) -I $(PB_DIR) -c $(PB_DIR)$/pb_decode.c -o $(PB_DIR)$/pb_decode.o
+	$(COMPILER) $(CFLAGS) -I $(PB_DIR) -I $(HEADER_DIR) -c $(PB_DIR)$/pb_decode.c -o $(PB_DIR)$/pb_decode.o
 
 $(ONNX_DIR)$/onnx.pb.o : $(ONNX_DIR)$/onnx.pb.c $(ONNX_DIR)$/onnx.pb.h $(PB_DIR)$/pb.h
-	$(COMPILER) $(CFLAGS) -I $(ONNX_DIR) -I $(PB_DIR) -c $(ONNX_DIR)$/onnx.pb.c -o $(ONNX_DIR)$/onnx.pb.o
+	$(COMPILER) $(CFLAGS) -I $(ONNX_DIR) -I $(PB_DIR) -I $(HEADER_DIR) -c $(ONNX_DIR)$/onnx.pb.c -o $(ONNX_DIR)$/onnx.pb.o
 
 $(PLATFORMS_DIR)$/$(PLATFORM)$/cm.o : $(PLATFORMS_DIR)$/$(PLATFORM)$/cm.c $(HEADER_DIR)$/cm.h
 	$(COMPILER) $(CFLAGS) -I $(HEADER_DIR) -c $(PLATFORMS_DIR)$/$(PLATFORM)$/cm.c -o $(PLATFORMS_DIR)$/$(PLATFORM)$/cm.o

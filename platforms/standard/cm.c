@@ -43,8 +43,28 @@ void closeOnnxFileStream(pb_istream_t * stream)
 static bool ReadBytes(pb_istream_t * stream, pb_byte_t * buffer, size_t size)
 {
   FILE * fp = (FILE*) stream->state;
-  size_t readed = fread(buffer,size,1,fp);
-  stream->bytes_left -= readed;
+  size_t readed = fread(buffer,1,size,fp);
+  if(ferror(fp)){
+     return false;
+  }
+  // ensure we readed the asked size
+  if(readed < size)
+  {
+    uint8_t i = 0;
+    do
+    {
+        readed += fread(buffer + readed, 1, size - readed, fp) ;
+        if(ferror(fp)){
+          return false;
+        }
+    } while( ++i < FILE_ACCESS_MAX_READ_PER_CALLBACK && readed < size);
+    
+    if( readed < size) 
+    {
+      // this is an error case.
+      return false;
+    }
+  }
   return true;
 }
 
