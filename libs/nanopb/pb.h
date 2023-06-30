@@ -88,7 +88,7 @@
 #include <limits.h>
 
 #ifdef PB_ENABLE_MALLOC
-#include <stdlib.h>
+#include "../includes/osal/heap.h"
 #endif
 #endif
 
@@ -474,12 +474,12 @@ struct pb_extension_s {
 /* Memory allocation functions to use. You can define pb_realloc and
  * pb_free to custom functions if you want. */
 #ifdef PB_ENABLE_MALLOC
-#   ifndef pb_realloc
-#       define pb_realloc(ptr, size) realloc(ptr, size)
-#   endif
-#   ifndef pb_free
-#       define pb_free(ptr) free(ptr)
-#   endif
+   ifndef pb_realloc
+       define pb_realloc(ptr, size) cm_realloc(ptr, size, INTERNAL_HEAP)
+   endif
+   ifndef pb_free
+       define pb_free(ptr) cm_free(ptr)
+   endif
 #endif
 
 /* This is used to inform about need to regenerate .pb.h/.pb.c files. */
