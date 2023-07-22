@@ -54,7 +54,8 @@ static bool ReadBytes(pb_istream_t * stream, pb_byte_t * buffer, size_t size)
     do
     {
         readed += fread(buffer + readed, 1, size - readed, fp) ;
-        if(ferror(fp)){
+        if(ferror(fp))
+        {
           return false;
         }
     } while( ++i < FILE_ACCESS_MAX_READ_PER_CALLBACK && readed < size);

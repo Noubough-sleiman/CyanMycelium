@@ -4,13 +4,12 @@
 
 #include <stdio.h>
 
-
 #define CRLF "\r\n"
 int main(){
 
   onnx_ModelProto model;
   
-  const char * filename = "C:/Users/guill/Documents/sources/CyanMycelium/samples/LSTM/lstm.onnx";
+  const char * filename = "C:/Users/guill/Documents/sources/CyanMycelium/samples/Abs/abs.onnx";
   pb_istream_t stream = openOnnxFileStream(filename);
   printf("Result is %s\r\n", stream.errmsg);
 
