@@ -2,48 +2,59 @@
 #define __CYAN_MISCELIUM_GRAPH__
 
 #include "cm.h"
+#include "math/cm_tensor.hpp"
+#include "nodes/cm_nodes_commons.hpp"
 
 namespace CyanMycelium
 {
 
+    class GraphItem
+    {
+    };
+
+    class Link : GraphItem 
+    {
+        public:
+        Node * Oini;
+        Node * Ofin;
+        Tensor Payload;
+    };
+    typedef Link * LinkPtr ;
+
+    class Node : GraphItem 
+    {
+        public:
+        LinkPtr * Opsc;
+        LinkPtr * Onsc;
+        virtual bool Activate() = 0 ;
+
+    };
+
     typedef Node * NodePtr ;
-    typedef Property * PropertyPtr ;
-    typedef MetaData * MetaDataPtr ;
 
-    struct Property {
-        char * Key;
-        void * Value;
-    };
-
-    class MetaData {
+    class UnaryOperator : Node
+    {
         public:
-        cm_size_t Count();
-        void * Get(const char * key);
-        bool TrySet(const char * key, void * value);
-        bool TryRemove(const char * key);
+        UnaryOperator(const UnaryFunctionPtr typedFn[TDT_COUNT]):Node(){ this->_typedFn = _typedFn; }
+        bool Activate() override ;
 
-        private:
-        uint8_t _propertyCount;
-        Property _properties[GRAPH_METADATA_SIZE];
+        protected:
+        UnaryFunctionPtr * _typedFn;
     };
+    typedef UnaryOperator * UnaryOperatorPtr;
 
-    class Node {
+    class BinaryOperator : Node
+    {
         public:
-        MetaDataPtr Infos; 
-        const char * Name;
-        void * Value;
+        BinaryOperator(const BinaryFunctionPtr typedFn[TDT_COUNT]):Node(){ this->_typedFn = _typedFn; }
+        bool Activate()  override  ;
 
-        struct{
-            uint8_t in;
-            uint8_t out;
-        } Count;
-
-        NodePtr inputs[ GRAPH_INPUT_SIZE + 1];
-        NodePtr outputs[ GRAPH_OUTPUT_SIZE + 1];
-
-        virtual bool Activate(void * context) = 0;
+        protected:
+        BinaryFunctionPtr * _typedFn;
     };
 
+    typedef BinaryOperator * BinaryOperatorPtr;
+    
     class Graph : Node {
     };
 }
