@@ -11,7 +11,7 @@ namespace CyanMycelium
   typedef void (*UnaryFunctionPtr)(TensorPtr, TensorPtr, UnaryOperatorPtr);
 
   #define UNARY_FUNC_NAME(fname) fname ## Func
-  #define UNARY_FUNC(fname) \
+  #define UNARY_FUNC_TEMPLATE(fname) \
   template <typename T> \
     void UNARY_FUNC_NAME(fname) (TensorPtr x, TensorPtr out, UnaryOperatorPtr node) \
     {  \
@@ -45,7 +45,7 @@ namespace CyanMycelium
   typedef void (*BinaryFunctionPtr)(TensorPtr, TensorPtr, TensorPtr, BinaryOperatorPtr);
 
   #define BINARY_FUNC_NAME(fname) fname ## Func
-  #define BINARY_FUNC(fname) \
+  #define BINARY_FUNC_TEMPLATE(fname) \
   template <typename T> \
     void BINARY_FUNC_NAME(fname) (TensorPtr x, TensorPtr y, TensorPtr out, UnaryOperatorPtr node) \
     {\

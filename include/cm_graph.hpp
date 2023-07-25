@@ -8,11 +8,13 @@
 namespace CyanMycelium
 {
 
+    /// @brief 
     class GraphItem
     {
     };
 
-    class Link : GraphItem 
+    /// @brief 
+    class Link : public GraphItem 
     {
         public:
         Node * Oini;
@@ -21,32 +23,41 @@ namespace CyanMycelium
     };
     typedef Link * LinkPtr ;
 
-    class Node : GraphItem 
+    /// @brief 
+    class Node : public GraphItem 
     {
         public:
         LinkPtr * Opsc;
         LinkPtr * Onsc;
-        virtual bool Activate() = 0 ;
-
     };
 
     typedef Node * NodePtr ;
 
-    class UnaryOperator : Node
+    /// @brief 
+    class Operator : public Node {
+        public:
+        virtual bool Activate() = 0 ;
+    } ;
+    typedef Operator * OperatorPtr;
+
+    /// @brief 
+    class UnaryOperator : public Operator
     {
         public:
-        UnaryOperator(const UnaryFunctionPtr typedFn[TDT_COUNT]):Node(){ this->_typedFn = _typedFn; }
+        UnaryOperator(const UnaryFunctionPtr typedFn[TDT_COUNT]):Operator(){ this->_typedFn = _typedFn; }
         bool Activate() override ;
 
         protected:
         UnaryFunctionPtr * _typedFn;
     };
+
     typedef UnaryOperator * UnaryOperatorPtr;
 
-    class BinaryOperator : Node
+    /// @brief 
+    class BinaryOperator : public Operator
     {
         public:
-        BinaryOperator(const BinaryFunctionPtr typedFn[TDT_COUNT]):Node(){ this->_typedFn = _typedFn; }
+        BinaryOperator(const BinaryFunctionPtr typedFn[TDT_COUNT]):Operator(){ this->_typedFn = _typedFn; }
         bool Activate()  override  ;
 
         protected:
@@ -55,7 +66,12 @@ namespace CyanMycelium
 
     typedef BinaryOperator * BinaryOperatorPtr;
     
+    /// @brief 
     class Graph : Node {
+        /// @brief NULL terminated list of nodes.
+        NodePtr * Nodes;
+        /// @brief NULL terminated list of links.
+        LinkPtr * Links;
     };
 }
 

@@ -38,7 +38,8 @@
     "chrono": "c",
     "vector": "cpp",
     "ratio": "cpp",
-    "tuple": "cpp"
+    "tuple": "cpp",
+    "algorithm": "cpp"
   },
   "C_Cpp.errorSquiggles": "enabled"
 }

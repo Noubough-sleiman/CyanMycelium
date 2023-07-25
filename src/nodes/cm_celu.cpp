@@ -1,25 +1,29 @@
+#include <cmath>
+
 #include "./cm_graph.hpp"
 #include "./nodes/cm_unary.hpp"
 
+
 namespace CyanMycelium         
 {
-  #define ABS_CODE(a,n) ((a<0) ? -a : a)
+  #define CELU_CODE(x,n) max(0, x) + min(0, n->alpha * ( exp(x/n->alpha) -1 ) )
   
-  UNARY_FUNC_TEMPLATE(ABS)
+  UNARY_FUNC_TEMPLATE(CELU)
 
-  UNARY_OP_ARRAY_IMPL(ABS,
+  // according to onnx documentation, Constrain input and output types to float32 tensors.
+  UNARY_OP_ARRAY_IMPL(CELU,
     nullptr,                         // Placeholder for TDT_UNDEFINED
-    UNARY_FUNCTION_PTR(ABS,float),   // Function for TDT_FLOAT
+    UNARY_FUNCTION_PTR(CELU,float),  // Function for TDT_FLOAT
     nullptr,                         // Function for TDT_UINT8
-    UNARY_FUNCTION_PTR(ABS,int8_t),  // Function for TDT_INT8
+    nullptr,                         // Function for TDT_INT8
     nullptr,                         // Function for TDT_UINT16
-    UNARY_FUNCTION_PTR(ABS,int16_t), // Function for TDT_INT16
-    UNARY_FUNCTION_PTR(ABS,int32_t), // Function for TDT_INT32
-    UNARY_FUNCTION_PTR(ABS,int64_t), // Function for TDT_INT64
+    nullptr,                         // Function for TDT_INT16
+    nullptr,                         // Function for TDT_INT32
+    nullptr,                         // Function for TDT_INT64
     nullptr,                         // Function for TDT_STRING
     nullptr,                         // Function for TDT_BOOL
     nullptr,                         // Function for TDT_FLOAT16
-    UNARY_FUNCTION_PTR(ABS,double),  // Function for TDT_DOUBLE
+    nullptr,                         // Function for TDT_DOUBLE
     nullptr,                         // Function for TDT_UINT32
     nullptr,                         // Function for TDT_UINT64
     nullptr,                         // Function for TDT_COMPLEX64
