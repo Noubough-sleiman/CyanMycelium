@@ -1,63 +1,64 @@
-#include "../includes/cm_graph.hpp"
+#include "cm_graph.hpp"
 
-int index_of_s( CyanMycelium::PropertyPtr properties, const char * key, cm_size_t size);
-
-cm_size_t CyanMycelium::MetaData::Count()
+namespace CyanMycelium         
 {
-    return this->_propertyCount;
-}
-
-void * CyanMycelium::MetaData::Get(const char * key)
-{
-    int i = index_of_s(this->_properties, key, this->_propertyCount);
-    if( i >= 0 )
-    {
-        return this->_properties[i].Value;
-    }
-    return NULL;
-}
-
-bool CyanMycelium::MetaData::TrySet(const char * key, void * value)
-{
-    if( key == NULL || this->_propertyCount == GRAPH_METADATA_SIZE) return false;
-    PropertyPtr p = this->_properties + this->_propertyCount ;
-    p->Key = key;
-    p->Value = value; 
-    this->_propertyCount++;
-    return true;
-}
-
-bool CyanMycelium::MetaData::TryRemove(const char * key)
-{
-    int i = index_of_s(this->_properties, key, this->_propertyCount);
-    if( i >= 0 )
-    {
-      PropertyPtr a = this->_properties;
-      if( i < this->_propertyCount -1 )
-      {
-        a += i;
-        size_t size = (this->_propertyCount-i-1) * sizeof(Property);
-        cm_memcpy(a, a+1, size );
-      }
-      this->_propertyCount --;
-      a = this->_properties + this->_propertyCount ;
-      a->Key = NULL;
-      a->Value = NULL; 
-      return true;
+  bool  UnaryOperator::Activate() 
+  {
+    LinkPtr * l = this->Opsc;
+    LinkPtr a = *l;
+    if( a != nullptr ) {
+        // this is the place we get the value holded by the link, which is the input tensor
+        Tensor input = a->Payload;
+        int i = (int)input.Type;
+        if( i >= 0 && i < TDT_COUNT )
+        {
+            UnaryFunctionPtr w = this->_typedFn[i];
+            if(w)
+            {
+              // TODO -> build a strategy about the resulting tensor
+              (*w)(&input, &input, this);
+            }
+        }
+        // transfert the input tensor content to the output tensor content.
+        // assuming the tensors has the same shape.
+        l = this->Onsc;
+        a = *l;
+        if( a != nullptr ) 
+        {
+            a ->Payload.Data = input.Data;
+            input.Data = NULL; 
+        }
+        return true;
     }
     return false;
-}
-
-int index_of_s( CyanMycelium::PropertyPtr properties, const char * key, cm_size_t size)
-{
-  if( key == NULL || size == 0 ) return -1;   
-
-  for(cm_size_t i=0; i != size; i++, properties++)
-  {
-    if( properties->Key && cm_strcmp(properties->Key, key) == 0)
-    {
-      return i;
-    }
   }
-  return -1;
-}
+
+  bool BinaryOperator::Activate() 
+  {
+    LinkPtr * l = this->Opsc;
+    LinkPtr a = *l;
+    LinkPtr b = *(l+1);
+
+    if( a != nullptr  && b != nullptr ) 
+    {
+      Tensor tx = a->Payload;
+      Tensor ty = b->Payload;
+      if(tx.Type != ty.Type)
+      {
+        // Input type mismatch
+        return false;
+      }
+      int i = (int)tx.Type;
+      if( i >= 0 && i < TDT_COUNT )
+      {
+        BinaryFunctionPtr w = this->_typedFn[i];
+        if(w)
+        {
+          // TODO -> build a strategy about the resulting tensor
+          (*w)(&tx, &ty, &tx, this);
+        }
+      }
+    }
+    return false;
+  }
+} 
