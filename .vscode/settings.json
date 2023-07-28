@@ -39,7 +39,8 @@
     "vector": "cpp",
     "ratio": "cpp",
     "tuple": "cpp",
-    "algorithm": "cpp"
+    "algorithm": "cpp",
+    "guiddef.h": "c"
   },
   "C_Cpp.errorSquiggles": "enabled"
 }

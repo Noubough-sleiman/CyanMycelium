@@ -17,7 +17,6 @@ namespace CyanMycelium
   #define OR Or
   #define POW Pow
   #define SUB Sub
-  #define SUM Sum
   #define WHERE Where
   #define XOR Xor
 
@@ -27,7 +26,7 @@ namespace CyanMycelium
   BINARY_OP_DECL(DIV)
   BINARY_OP_DECL(EQUAL)
   BINARY_OP_DECL(GREATER)
-  BINARY_OP_DECL(LES)
+  BINARY_OP_DECL(LESS)
   BINARY_OP_DECL(MAX)
   BINARY_OP_DECL(MEAN)
   BINARY_OP_DECL(MIN)
@@ -35,7 +34,6 @@ namespace CyanMycelium
   BINARY_OP_DECL(OR)
   BINARY_OP_DECL(POW)
   BINARY_OP_DECL(SUB)
-  BINARY_OP_DECL(SUM)
   BINARY_OP_DECL(WHERE)
   BINARY_OP_DECL(XOR)
 }

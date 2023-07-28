@@ -60,6 +60,8 @@ namespace CyanMycelium
         uint32_t Shape[TENSOR_MAX_DIMENSION]; // shape of tensor. 
        
         bool ShapesAreEqual(TensorPtr other);
+
+        TensorPtr Clone();
     };
 
     typedef Tensor * TensorPtr;

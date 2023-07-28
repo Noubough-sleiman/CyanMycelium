@@ -1,7 +1,8 @@
 #include <cmath>
 
 #include "./cm_graph.hpp"
-#include "./nodes/cm_unary.hpp"
+#include "./nodes/unary/cm_unary.hpp"
+
 
 namespace CyanMycelium         
 {

@@ -28,7 +28,7 @@ namespace CyanMycelium
     // fast track
     if( this->Dimension == 1)
     {
-      return this->Shape[0] == other->Shape[0]
+      return this->Shape[0] == other->Shape[0];
     }
 
     for(int i=0; i != this->Dimension; i++)

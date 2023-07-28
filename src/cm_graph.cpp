@@ -1,74 +1,109 @@
 #include "cm_graph.hpp"
 
-namespace CyanMycelium         
-{
-  bool  UnaryOperator::Activate() 
+using  namespace CyanMycelium ;         
+
+  bool Link :: Activate(uint8_t * input, IActivationCtxPtr ctx)
   {
-    LinkPtr * l = this->Opsc;
-    LinkPtr a = *l;
-    if( a != nullptr ) {
-        // this is the place we get the value holded by the link, which is the input tensor
-        TensorPtr input = &a->Payload;
-        int i = (int)input->Type;
-        if( i >= 0 && i < TDT_COUNT )
+     this-> Payload.Data = input;
+  }  
+
+  bool Operator:: ForwardOuput(TensorPtr output, IActivationCtxPtr ctx)
+  {
+      switch(this->Onsc.Count)
+      {
+        case 0 : return true;
+        case 1 : return ctx->Activate(this->Onsc[0], output->Data);
+        default:
         {
-            UnaryFunctionPtr w = this->_typedFn[i];
-            if(w)
+          if( ctx->Activate(this->Onsc[0], output->Data) == false)
+          {
+            return false;
+          }
+            
+          for(int i=1; i < this->Onsc.Count ; ++i)
+          {
+            void * buffer = ctx->MemoryManager->Clone(output->Data, output->Size);
+            if( !buffer || ! ctx->Activate(this->Onsc[0], buffer))
             {
-              // TODO -> build a strategy about the resulting tensor
-              (*w)(input, input, this);
+              return false;
             }
+          }
         }
-        // transfert the input tensor content to the output tensor content.
-        // assuming the tensors has the same shape.
-        l = this->Onsc;
-        a = *l;
-        if( a != nullptr ) 
+      }
+      return true;
+  }
+
+  bool  UnaryOperator::Activate(IActivationCtxPtr ctx) 
+  {
+    // we must have a single input
+    if( this->Opsc.Count == 1)
+    {
+      LinkPtr a = this->Opsc[0];
+      if( a )
+      {
+        TensorPtr input = &a->Payload;
+        TensorPtr output = input;
+        int i = (int)input->Type;
+        // do not assume that the type is valid.
+        if( i < 0 && i >= TDT_COUNT )
         {
-            a ->Payload.Data = input->Data;
+          return false;
         }
-        return true;
+        UnaryFunctionPtr w = this->_typedFn[i];
+        if(w)
+        {
+          (*w)(input, output, this);
+        }
+        return this->ForwardOuput(output,ctx);
+      }
     }
     return false;
   }
 
-  bool BinaryOperator::Activate() 
+  bool BinaryOperator::Activate(IActivationCtxPtr ctx) 
   {
-    LinkPtr * l = this->Opsc;
-    LinkPtr a = *l;
-    LinkPtr b = *(l+1);
-
-    if( a != nullptr  && b != nullptr ) 
+    // we must have 2 input
+    if( this->Opsc.Count == 2)
     {
-      TensorPtr tx = &a->Payload;
-      TensorPtr ty = &b->Payload;
-      TensorPtr output = tx;
+      LinkPtr x = this->Opsc[0];
+      LinkPtr y = this->Opsc[1];
+      if( x && y )
+      {
+        TensorPtr tx = nullptr;
+        TensorPtr ty = nullptr;
 
-      if(tx->Type != ty->Type)
-      {
-        // Input type mismatch
-        return false;
-      }
-      int i = (int)tx->Type;
-      if( i >= 0 && i < TDT_COUNT )
-      {
+        // bigger buffer in first, in order to beeing able to broadcast. 
+        if( y->Payload.Size > y->Payload.Size)
+        {
+            tx = &y->Payload;
+            ty = &x->Payload;
+        } 
+        else 
+        {
+            tx = &x->Payload;
+            ty = &y->Payload;
+        }
+        TensorPtr output = tx;
+
+        int i = (int)tx->Type;
+        // do not assume that the type is valid.
+        if( i < 0 && i >= TDT_COUNT )
+        {
+          return false;
+        }
         BinaryFunctionPtr w = this->_typedFn[i];
         if(w)
         {
           // TODO -> build a strategy about the resulting tensor
           (*w)(tx, ty, output, this);
         }
+        
+        // free the smaller buffer.
+        ctx->MemoryManager->Free(ty->Data);
+        ty->Data = nullptr;
+
+        return this->ForwardOuput(output,ctx);
       }
-        // transfert the input tensor content to the output tensor content.
-        // assuming the tensors has the same shape.
-        l = this->Onsc;
-        a = *l;
-        if( a != nullptr ) 
-        {
-            a ->Payload.Data = output->Data;
-        }
-        return true;
     }
     return false;
-  }
-} 
+}; 

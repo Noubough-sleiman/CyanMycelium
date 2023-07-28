@@ -1,19 +1,19 @@
 #include <cmath>
 
 #include "./cm_graph.hpp"
-#include "./nodes/cm_unary.hpp"
+#include "./nodes/unary/cm_unary.hpp"
 
 
 namespace CyanMycelium         
 {
-  #define ACOS_CODE(a,n) acos(a)
+  #define ASIN_CODE(a,n) asin(a)
   
-  UNARY_FUNC_TEMPLATE(ACOS)
+  UNARY_FUNC_TEMPLATE(ASIN)
 
   // according to onnx documentation, Constrain input and output types to float tensors.
-  UNARY_OP_ARRAY_IMPL(ACOS,
+  UNARY_OP_ARRAY_IMPL(ASIN,
     nullptr,                         // Placeholder for TDT_UNDEFINED
-    UNARY_FUNCTION_PTR(ACOS,float),  // Function for TDT_FLOAT
+    UNARY_FUNCTION_PTR(ASIN,float),  // Function for TDT_FLOAT
     nullptr,                         // Function for TDT_UINT8
     nullptr,                         // Function for TDT_INT8
     nullptr,                         // Function for TDT_UINT16
@@ -23,7 +23,7 @@ namespace CyanMycelium
     nullptr,                         // Function for TDT_STRING
     nullptr,                         // Function for TDT_BOOL
     nullptr,                         // Function for TDT_FLOAT16
-    UNARY_FUNCTION_PTR(ACOS,double), // Function for TDT_DOUBLE
+    UNARY_FUNCTION_PTR(ASIN,double), // Function for TDT_DOUBLE
     nullptr,                         // Function for TDT_UINT32
     nullptr,                         // Function for TDT_UINT64
     nullptr,                         // Function for TDT_COMPLEX64

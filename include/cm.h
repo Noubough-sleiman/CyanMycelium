@@ -1,8 +1,8 @@
  #ifndef __CYAN_MISCELIUM_DEF__
 #define __CYAN_MISCELIUM_DEF__
 
+#include <stdlib.h>
 #include <stdint.h>
-#include "../libs/nanopb/pb.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,8 +30,9 @@ void * cm_malloc(cm_size_t size, int heap_id) ;
 void * cm_realloc(void * ptr, cm_size_t size, int heap_id) ;
 void cm_free(void * ptr, int heap_id ) ;
 
-pb_istream_t openOnnxFileStream(const char * src) ;
-void closeOnnxFileStream(pb_istream_t * stream) ;
+#define cm_memset memset
+
+#define cm_rand rand
 
 #ifdef __cplusplus
 }

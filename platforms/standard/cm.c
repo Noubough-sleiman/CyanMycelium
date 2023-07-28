@@ -1,6 +1,7 @@
 // CM (Cyan Mycelium) file to use with the nanopb lib
 #include <stdlib.h>
 #include <stdio.h>
+#include <rpcdce.h>
 #include "../include/cm.h"
 #include "../libs/nanopb/pb_decode.h"
 
@@ -87,5 +88,11 @@ void * cm_realloc(void * ptr, size_t size, int heap_id)
 void cm_free(void * ptr, int heap_id)
 {
     return free(ptr);
+}
+
+uuid_t cm_createGuid(){
+  UUID uid;
+  auto status = UuidCreate(&uid);
+  return uid;
 }
 
