@@ -3,29 +3,54 @@
 
 #include "collections/cm_queue.hpp"
 #include "concurrent/cm_concurrent.hpp"
+#include "concurrent/cm_task.hpp"
 
 namespace CyanMycelium
 {
-   #define CM_DEFAULT_CC_TIMEOUT 5000
+   #define CM_DEFAULT_CQ_TIMEOUT 5000
+   #define CM_DEFAULT_CQ_NTHREAD 2
+   #define CM_DEFAULT_CQ_STACKSIZE 0
+   #define CM_DEFAULT_CQ_PRIORITY LOW
+
+
+   struct ConcurrentQueueOptions
+   {
+     unsigned int ThreadCound;
+     unsigned int WaitTimeout;
+     unsigned int StackSize;
+     Thread :: Priority Priority;
+   };
 
    template <typename T>
     class ConcurrentQueue
     {
      public:
-     ConcurrentQueue(Queue<T> *, unsigned int = CM_DEFAULT_CC_TIMEOUT);
+     ConcurrentQueue(Queue<T> *, ConcurrentQueueOptions * options);
       ~ConcurrentQueue();
 
      void Start();
      void Stop(bool=false);
      bool TryProduce(T);
-     void Run();
      virtual void Consume(T) = 0;
 
      private:
+     unsigned long _Run(void *);
+     bool _IsStartedSafe();
+
+     ConcurrentQueueOptions _options;
+
      Queue<T> * _queue;
+     
+     
+     // sync
      SemaphorePtr _wait;
      MutexPtr _lock;
      unsigned int _timeout;
+
+     // threading
+     ThreadPtr _threads;
+     int _threadCount; 
+     bool _started
     };
 
 }
