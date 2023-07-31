@@ -3,12 +3,19 @@
 using namespace CyanMycelium;
 
 template <typename T>
-ConcurrentQueue<T> :: ConcurrentQueue(Queue<T> * q, unsigned int to = CM_DEFAULT_CC_TIMEOUT)
+ConcurrentQueue<T> :: ConcurrentQueue(Queue<T> *, ConcurrentQueueOptions * options )
 {
     _queue = q;
     _wait = new Semaphore(0,_queue->Capacity());
     _lock = new Mutex();
     _timeout = to;
+    _threadCount = max(nthread,1);
+    _threads = nullptr;
+    _started = false;
+    _options.ThreadCount = options ? options->ThreadCount : CM_DEFAULT_CQ_NTHREAD ;
+    _options.WaitTimeout = options ? options->WaitTimeout : CM_DEFAULT_CQ_TIMEOUT ;
+    _options.StackSize = options ? options->StackSize : CM_DEFAULT_CQ_STACKSIZE ;
+    _options.Priority = options ? options->Priority : CM_DEFAULT_CQ_PRIORITY ;
 }
 
 template <typename T>
@@ -21,12 +28,26 @@ ConcurrentQueue<T> :: ~ConcurrentQueue()
 template <typename T>
 void ConcurrentQueue<T> :: Start()
 {
-    
+    // we create the thread
+    _lock->Take();
+    if( !_started)
+    {
+      _started = true;
+      _threads = new ThreadPtr[_threadCount];
+      void * params = null;
+      unsigned int stackSize = 0;
+      for(int i=0; i < _threadCount; i++)
+      {
+        _threads[i] = new Thread(_Run,_options.StackSize, params, _options.Priority);
+      }
+    }
+    _lock->Give();
 }
 
 template <typename T>
 void ConcurrentQueue<T> :: Stop(bool wait = false)
 {
+   // we 
     
 }
 
@@ -48,24 +69,36 @@ bool ConcurrentQueue<T> :: TryProduce(T obj)
 }
 
 template <typename T>
-void ConcurrentQueue<T> :: Run()
+unsigned long  ConcurrentQueue<T> :: _Run(void *)
 {
-    do
+
+    _lock->Take();
+    started = _started;
+    _lock->Give();
+    if( started)
     {
-        // we wait until at least on object available
-      _wait->Take(_timeout);
-    
-      T * obj;
-      _lock->Take();
-      if(!_queue->TryDequeue(obj))
+      do
       {
-        _lock->Give();
-        continue;
-      }
-      _lock->Give();
-      
-      // here we supposed to get an object
-      Consume(*obj);
+        // we wait until at least on object available
+        _wait->Take(_timeout);
     
-    } while(true);
+        T * obj;
+        _lock->Take();
+        if(!_queue->TryDequeue(obj))
+        {
+          _lock->Give();
+          continue;
+        }
+        _lock->Give();
+      
+        // here we supposed to get an object
+        Consume(*obj);
+
+        // test for exit the thread.
+        _lock->Take();
+        started = _started;
+        _lock->Give();
+
+      } while(started)
+    }
 }

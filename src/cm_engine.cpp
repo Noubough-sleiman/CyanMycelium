@@ -90,7 +90,7 @@ bool InferenceSession :: Activate(LinkPtr l, void * data)
     if(nextNode->Opsc.Count > 1)
     {
       // we need to synchronize and potentially activate the node
-      IMutexPtr lock = nextNode->GetLock();
+      MutexPtr lock = nextNode->GetLock();
       if(lock) lock->Take();
       l->Payload.Data = data;
       if(__AreLinkReady(&nextNode->opsc))

@@ -2,6 +2,22 @@
 
 using  namespace CyanMycelium ;         
 
+  Node :: Node()
+  {
+     _lock = new Mutex();
+  }
+
+  Node :: ~Node()
+  {
+      delete(_lock);
+  }
+
+  MutexPtr Node :: GetLock()
+  {
+    return _lock;
+  }
+
+
   bool Link :: Activate(uint8_t * input, IActivationCtxPtr ctx)
   {
      this-> Payload.Data = input;

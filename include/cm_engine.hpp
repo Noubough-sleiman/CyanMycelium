@@ -64,7 +64,7 @@ namespace CyanMycelium
     
     private :
     GraphPtr _model;
-    IMutexPtr _completionHandle;
+    MutexPtr _completionHandle;
   };
 
   typedef InferenceSession * InferenceSessionPtr;

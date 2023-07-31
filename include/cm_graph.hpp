@@ -2,6 +2,7 @@
 #define __CYAN_MISCELIUM_GRAPH__
 
 #include "cm.h"
+#include "concurrent/cm_concurrent.hpp"
 #include "math/cm_tensor.hpp"
 #include "memory/cm_memory_manager.hpp"
 #include "nodes/cm_nodes_commons.hpp"
@@ -54,13 +55,16 @@ namespace CyanMycelium
     class Node : public GraphItem 
     {
         public:
+        Node();
+        ~Node();
         LinkCollection Opsc;
         LinkCollection Onsc;
-        virtual bool Activate(IActivationCtxPtr ctx) = 0 ;   
-        IMutexPtr GetLock();
+        MutexPtr GetLock();
 
+        virtual bool Activate(IActivationCtxPtr ctx) = 0 ;   
+ 
         private :
-        IMutexPtr _lock; 
+        MutexPtr _lock; 
     };
 
     /// @brief 

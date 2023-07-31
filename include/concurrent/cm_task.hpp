@@ -26,6 +26,8 @@ namespace CyanMycelium
     private:
        cm_thread_t _handle;
     };
+
+    typedef Thread * ThreadPtr;
 }
 
 #endif
