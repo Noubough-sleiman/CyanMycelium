@@ -1,9 +1,7 @@
-#ifndef __CYAN_MISCELIUM_GRAPH_MEMORY__
-#define __CYAN_MISCELIUM_GRAPH_MEMORY__
+#ifndef __CYAN_MISCELIUM_MEMORY_MANAGER__
+#define __CYAN_MISCELIUM_MEMORY_MANAGER__
 
-#include "cm.h"
-
-namespace CyanMycelium
+namespace CyanMycelium         
 {
     /// @brief 
     class IMemoryManager

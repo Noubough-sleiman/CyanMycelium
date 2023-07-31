@@ -40,7 +40,15 @@
     "ratio": "cpp",
     "tuple": "cpp",
     "algorithm": "cpp",
-    "guiddef.h": "c"
+    "guiddef.h": "c",
+    "array": "c",
+    "functional": "c",
+    "iterator": "c",
+    "list": "c",
+    "map": "c",
+    "unordered_map": "c",
+    "xhash": "c",
+    "xtree": "c"
   },
   "C_Cpp.errorSquiggles": "enabled"
 }

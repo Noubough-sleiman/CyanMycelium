@@ -1,7 +1,4 @@
-#include <stdlib.h>
-#include <string.h>
-
-#include "./cm_engine_mem.hpp"
+#include "cm_engine_mem.hpp"
 
 using namespace CyanMycelium  ;       
 
@@ -10,22 +7,22 @@ void * MemoryManagerBase :: Clone(void * ptr, const size_t size, int heap_id = 0
   void * copy = this->Malloc(size, heap_id);
   if( copy)
   {
-     memcpy(copy, ptr, size);
+     cm_memcpy(copy, ptr, size);
   }
 }
 
 void * MemoryManagerBase :: Malloc(const size_t size, int heap_id = 0)
 {
-  return malloc(size);
+  return cm_malloc(size);
 }
 
 void * MemoryManagerBase :: Realloc(void * ptr,const size_t size, int heap_id = 0)
 {
-  return realloc(ptr,size);
+  return cm_realloc(ptr,size);
 }
 
 void MemoryManagerBase :: Free(void * ptr, int heap_id = 0)
 {
-  free(ptr);
+  cm_free(ptr);
 }
 

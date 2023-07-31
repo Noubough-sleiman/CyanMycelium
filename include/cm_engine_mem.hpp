@@ -2,7 +2,7 @@
 #define __CYAN_MISCELIUM_ENGINE_MEMORY__
 
 #include "cm.h"
-#include "./cm_graph.hpp"
+#include "memory/cm_memory_manager.hpp"
 
 namespace CyanMycelium         
 {

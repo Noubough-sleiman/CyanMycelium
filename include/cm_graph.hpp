@@ -3,8 +3,8 @@
 
 #include "cm.h"
 #include "math/cm_tensor.hpp"
+#include "memory/cm_memory_manager.hpp"
 #include "nodes/cm_nodes_commons.hpp"
-#include "cm_graph_mem.hpp"
 #include "cm_graph_utils.hpp"
 
 namespace CyanMycelium

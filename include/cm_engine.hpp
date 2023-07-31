@@ -4,6 +4,7 @@
 #include "cm_graph.hpp"
 #include "types/cm_guid.hpp"
 #include "concurrent/cm_concurrent.hpp"
+#include "collections/cm_queue.hpp"
 
 namespace CyanMycelium         
 {

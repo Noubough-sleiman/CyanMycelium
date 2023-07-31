@@ -1,42 +1,47 @@
- #ifndef __CYAN_MISCELIUM_DEF__
+#ifndef __CYAN_MISCELIUM_DEF__
 #define __CYAN_MISCELIUM_DEF__
 
-#include <stdlib.h>
-#include <stdint.h>
-
-#ifdef __cplusplus
-extern "C" {
+#if !defined(_WIN32) && (defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__)))
+    /* UNIX-style OS. ------------------------------------------- */
+    #include <unistd.h>
+    #if defined(_POSIX_VERSION)
+        /* POSIX compliant */
+    #endif
+    
+    #include <sys/param.h>
+    #if defined(BSD)
+    /* BSD (DragonFly BSD, FreeBSD, OpenBSD, NetBSD). ----------- */
+    #endif
 #endif
 
-#define GRAPH_METADATA_SIZE 8
-#define GRAPH_INPUT_SIZE 8
-#define GRAPH_OUTPUT_SIZE 8
-
-#define FILE_ACCESS_MAX_READ_PER_CALLBACK 8
-
-typedef uint16_t cm_size_t;
-typedef uint16_t session_id_t;
-
-#define INTERNAL_HEAP  0
-#define EXTERNAL_HEAP  1
-
-#define INTERNAL_HEAP_MAX_KO  300
-#define EXTERNAL_HEAP_MAX_KO  2000
-
-#define cm_strcmp strcmp
-#define cm_memcpy memcpy
-
-void * cm_malloc(cm_size_t size, int heap_id) ;
-void * cm_realloc(void * ptr, cm_size_t size, int heap_id) ;
-void cm_free(void * ptr, int heap_id ) ;
-
-#define cm_memset memset
-
-#define cm_rand rand
-
-#ifdef __cplusplus
-}
+#if defined(__linux__)
+    /* Linux  */
 #endif
 
+#if defined(__APPLE__) && defined(__MACH__)
+    /* Apple OSX and iOS (Darwin) */
+#include <TargetConditionals.h>
+#if TARGET_IPHONE_SIMULATOR == 1
+    /* iOS in Xcode simulator */
+#elif TARGET_OS_IPHONE == 1
+    /* iOS on iPhone, iPad, etc. */    
+#elif TARGET_OS_MAC == 1
+    /* OS X */
+#endif
+#endif
+
+#if defined(__CYGWIN__) && !defined(_WIN32)
+    /* Cygwin POSIX under Microsoft Windows. */
+#endif
+
+#if defined(_WIN64)
+    /* Microsoft Windows (64-bit) */
+    #include "win/include/cm_win64.h"
+#elif defined(_WIN32)
+    /* Microsoft Windows (32-bit) */
+#endif
+
+#if defined(__BLUE_PANDA__)
+#endif
 
 #endif
