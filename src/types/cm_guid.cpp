@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <string.h>
-#include "./types/cm_guid.hpp"
-#include "./cm.h"
+#include "types/cm_guid.hpp"
+#include "cm.h"
 
 using namespace CyanMycelium;
 
-Guid::Guid(bool set = false)
+Guid::Guid(bool set)
 {
 	if(set)
 	{
@@ -37,7 +37,7 @@ void Guid :: Set()
 
 int Guid::ToString(char * dest, int length)
 {
-	return snprintf(dest, length, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+	return snprintf(dest, length, "%02u%02u%02u%02u-%02u%02u-%02u%02u-%02u%02u-%02u%02u%02u%02u%02u%02u",
 		this->_raw[0],
 		this->_raw[1],
 		this->_raw[2],
@@ -66,7 +66,7 @@ bool Guid::operator= (Guid * b)
 Guid * Guid::FromString(const char * src)
 {
 	Guid * res = new Guid();
-	if (sscanf(src, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+	if (sscanf(src, "%02u%02u%02u%02u-%02u%02u-%02u%02u-%02u%02u-%02u%02u%02u%02u%02u%02u",
 		&(res->_raw[0]),
 		&(res->_raw[1]),
 		&(res->_raw[2]),
@@ -105,7 +105,7 @@ int Guid::CreateString(char * dest, int length)
 	};
 	for (i = 0; i < 4; i++) _raw32[i] = cm_rand();
 
-	return snprintf(dest, length, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+	return snprintf(dest, length, "%02u%02u%02u%02u-%02u%02u-%02u%02u-%02u%02u-%02u%02u%02u%02u%02u%02u",
 		_raw[0],
 		_raw[1],
 		_raw[2],

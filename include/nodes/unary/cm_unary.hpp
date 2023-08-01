@@ -1,6 +1,6 @@
 #ifndef __CYAN_MISCELIUM_NODE_UNARY__
 #define __CYAN_MISCELIUM_NODE_UNARY__
-#include "./cm_graph.hpp"
+#include "cm_graph.hpp"
 
 namespace CyanMycelium
 {
@@ -27,7 +27,7 @@ namespace CyanMycelium
    UNARY_OP_DECL(ATAN)
    UNARY_OP_DECL(ATANH)
    UNARY_OP_DECL(CEIL)
-   UNARY_OP_DECL(CELU, float alpha;)
+   UNARY_OP_DECL(CELU, float Alpha;)
    UNARY_OP_DECL(COS)
    UNARY_OP_DECL(COSH)
    UNARY_OP_DECL(ELU)

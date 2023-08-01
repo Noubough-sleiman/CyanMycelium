@@ -3,19 +3,17 @@
 using namespace CyanMycelium;
 
 template <typename T>
-ConcurrentQueue<T> :: ConcurrentQueue(Queue<T> *, ConcurrentQueueOptions * options )
+ConcurrentQueue<T> :: ConcurrentQueue(Queue<T> * q, ConcurrentQueueOptions * options )
 {
     _queue = q;
     _wait = new Semaphore(0,_queue->Capacity());
     _lock = new Mutex();
-    _timeout = to;
-    _threadCount = max(nthread,1);
-    _threads = nullptr;
+     _threads = nullptr;
     _started = false;
-    _options.ThreadCount = options ? options->ThreadCount : CM_DEFAULT_CQ_NTHREAD ;
+    _options.ThreadCount = max(options ? options->ThreadCount : CM_DEFAULT_CQ_NTHREAD,1) ;
     _options.WaitTimeout = options ? options->WaitTimeout : CM_DEFAULT_CQ_TIMEOUT ;
     _options.StackSize = options ? options->StackSize : CM_DEFAULT_CQ_STACKSIZE ;
-    _options.Priority = options ? options->Priority : CM_DEFAULT_CQ_PRIORITY ;
+    _options.Priority = options ? options->Priority : (Thread :: Priority) CM_DEFAULT_CQ_PRIORITY ;
 }
 
 template <typename T>
@@ -33,10 +31,10 @@ void ConcurrentQueue<T> :: Start()
     if( !_started)
     {
       _started = true;
-      _threads = new ThreadPtr[_threadCount];
-      void * params = null;
+      _threads = new ThreadPtr[_options.ThreadCount];
+      void * params = nullptr;
       unsigned int stackSize = 0;
-      for(int i=0; i < _threadCount; i++)
+      for(int i=0; i < _options.ThreadCount; i++)
       {
         _threads[i] = new Thread(_Run,_options.StackSize, params, _options.Priority);
       }
@@ -45,17 +43,16 @@ void ConcurrentQueue<T> :: Start()
 }
 
 template <typename T>
-void ConcurrentQueue<T> :: Stop(bool wait = false)
+void ConcurrentQueue<T> :: Stop(bool wait)
 {
-   // we 
-    
+  _started = false;
 }
 
 template <typename T>
 bool ConcurrentQueue<T> :: TryProduce(T obj)
 {
     _lock->Take();
-    if(_queue->TryEnqueue(T))
+    if(_queue->TryEnqueue(obj))
     {
       _lock->Give();
       // we tell than one more object is available
@@ -73,14 +70,14 @@ unsigned long  ConcurrentQueue<T> :: _Run(void *)
 {
 
     _lock->Take();
-    started = _started;
+    boolean started = _started;
     _lock->Give();
     if( started)
     {
       do
       {
         // we wait until at least on object available
-        _wait->Take(_timeout);
+        _wait->Take(_options.WaitTimeout);
     
         T * obj;
         _lock->Take();
@@ -99,6 +96,7 @@ unsigned long  ConcurrentQueue<T> :: _Run(void *)
         started = _started;
         _lock->Give();
 
-      } while(started)
+      } while(started);
     }
+    return 0;
 }

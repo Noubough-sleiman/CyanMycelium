@@ -3,12 +3,12 @@
 using namespace CyanMycelium;
 
 template <typename T>
-Queue<T>::Queue(int capacity = CM_DEFAULT_QUEUE_SIZE)
+Queue<T>::Queue(int capacity )
 {
     capacity = capacity;
     _front = 0;
     _rear = -1;
-    count = 0;
+    _count = 0;
     _arr = new T[capacity];
 }
 
@@ -20,7 +20,7 @@ Queue<T>::~Queue() {
 template <typename T>
 bool Queue<T>::TryDequeue(T * target)
 {
-    if (isEmpty())
+    if (IsEmpty())
     {
         *target = nullptr;
         return false;
@@ -35,7 +35,7 @@ bool Queue<T>::TryDequeue(T * target)
 template <typename T>
 bool Queue<T>::TryEnqueue(T item)
 {
-    if (isFull())
+    if (IsFull())
     {
         return false;
     }

@@ -6,12 +6,21 @@
 #include "math/cm_tensor.hpp"
 #include "memory/cm_memory_manager.hpp"
 #include "nodes/cm_nodes_commons.hpp"
-#include "cm_graph_utils.hpp"
+#include "collections/cm_collections.hpp"
+#include "cm_engine_mem.hpp"
 
 namespace CyanMycelium
 {
-    typedef Link * LinkPtr ;
-    typedef Node * NodePtr ;
+    extern const char * CM_DEFAULT_NAME;   
+    
+    // forward declaration
+    class Node;
+    class Link;
+    class UnaryOperator;
+    class BinaryOperator;
+
+    typedef void (*UnaryFunctionPtr)(Tensor *, Tensor *, UnaryOperator *);
+    typedef void (*BinaryFunctionPtr)(Tensor * , Tensor *, Tensor *, BinaryOperator *);
 
     /// @brief 
     class IActivationCtx
@@ -19,8 +28,8 @@ namespace CyanMycelium
         public:
         IMemoryManagerPtr MemoryManager;
 
-        virtual bool Activate(LinkPtr, void *) = 0;
-        virtual bool Activate(NodePtr) = 0;
+        virtual bool Activate(Link *, void *) = 0;
+        virtual bool Activate(Node *) = 0;
         
         protected:
         IActivationCtx(IMemoryManagerPtr mm)
@@ -40,11 +49,19 @@ namespace CyanMycelium
     class Link : public GraphItem 
     {
         public:
-        NodePtr Oini;
-        NodePtr Ofin;
+
+        Link(){};
+        Link(const uint32_t * shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED)
+        {
+            Payload.Set(shape, dimension, type);
+        };
+        Node * Oini;
+        Node * Ofin;
         Tensor Payload;
         virtual bool Activate(uint8_t * input, IActivationCtxPtr ctx);
     };
+
+    typedef Link * LinkPtr ;
 
     /// @brief 
     class LinkCollection : public Collection<LinkPtr>
@@ -66,6 +83,8 @@ namespace CyanMycelium
         private :
         MutexPtr _lock; 
     };
+
+    typedef Node * NodePtr ;
 
     /// @brief 
     class NodeCollection : public Collection<NodePtr>
@@ -91,6 +110,8 @@ namespace CyanMycelium
     };
     typedef UnaryOperator * UnaryOperatorPtr;
 
+
+
     /// @brief 
     class BinaryOperator : public Operator
     {
@@ -102,7 +123,8 @@ namespace CyanMycelium
         BinaryFunctionPtr * _typedFn;
     };
     typedef BinaryOperator * BinaryOperatorPtr;
-    
+
+
     /// @brief The Runtime support for the computational graph. 
     /// As node we use  Object Positive Semi Conductor (Opsc) as input 
     /// and Object Negativ Semi Conductor (Onsc) as output
@@ -117,15 +139,10 @@ namespace CyanMycelium
 
         KeyValueCollection<LinkPtr> inputs;
         KeyValueCollection<LinkPtr> outputs;
+
+        bool Activate(IActivationCtxPtr ctx)  override  ;
+
     };
     typedef Graph *  GraphPtr;
-
-    /// @brief 
-    class IGraphBuilder {
-        public:
-        virtual GraphPtr Build(...) = 0;
-    };
-
-    typedef IGraphBuilder * IGraphBuilderPtr;
 }
 #endif

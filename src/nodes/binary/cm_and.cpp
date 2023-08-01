@@ -1,5 +1,5 @@
-#include "./cm_graph.hpp"
-#include "./nodes/binary/cm_binary.hpp"
+#include "cm_graph.hpp"
+#include "nodes/binary/cm_binary.hpp"
 
 namespace CyanMycelium         
 {

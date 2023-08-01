@@ -2,6 +2,8 @@
 
 using  namespace CyanMycelium ;         
 
+const char CM_DEFAULT_NAME[] = {'d','e','f','a','u','l', 't'};   
+
   Node :: Node()
   {
      _lock = new Mutex();
@@ -21,11 +23,18 @@ using  namespace CyanMycelium ;
   bool Link :: Activate(uint8_t * input, IActivationCtxPtr ctx)
   {
      this-> Payload.Data = input;
+     return true;
   }  
+
+  bool Graph :: Activate(IActivationCtxPtr ctx)
+  {
+    return true;
+  }
 
   bool Operator:: ForwardOuput(TensorPtr output, IActivationCtxPtr ctx)
   {
-      switch(this->Onsc.Count)
+      unsigned int count = this->Onsc.Count();
+      switch(count)
       {
         case 0 : return true;
         case 1 : return ctx->Activate(this->Onsc[0], output->Data);
@@ -36,7 +45,7 @@ using  namespace CyanMycelium ;
             return false;
           }
             
-          for(int i=1; i < this->Onsc.Count ; ++i)
+          for(unsigned int i=1; i < count ; ++i)
           {
             void * buffer = ctx->MemoryManager->Clone(output->Data, output->Size);
             if( !buffer || ! ctx->Activate(this->Onsc[0], buffer))
@@ -52,7 +61,9 @@ using  namespace CyanMycelium ;
   bool  UnaryOperator::Activate(IActivationCtxPtr ctx) 
   {
     // we must have a single input
-    if( this->Opsc.Count == 1)
+    unsigned int count = this->Opsc.Count();
+
+    if( count == 1)
     {
       LinkPtr a = this->Opsc[0];
       if( a )
@@ -79,7 +90,8 @@ using  namespace CyanMycelium ;
   bool BinaryOperator::Activate(IActivationCtxPtr ctx) 
   {
     // we must have 2 input
-    if( this->Opsc.Count == 2)
+    unsigned int count = this->Opsc.Count();
+    if( count == 2)
     {
       LinkPtr x = this->Opsc[0];
       LinkPtr y = this->Opsc[1];
@@ -89,7 +101,7 @@ using  namespace CyanMycelium ;
         TensorPtr ty = nullptr;
 
         // bigger buffer in first, in order to beeing able to broadcast. 
-        if( y->Payload.Size > y->Payload.Size)
+        if( y->Payload.Size > x->Payload.Size)
         {
             tx = &y->Payload;
             ty = &x->Payload;

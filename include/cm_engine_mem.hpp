@@ -6,7 +6,7 @@
 
 namespace CyanMycelium         
 {
-  class MemoryManagerBase : IMemoryManager 
+  class MemoryManagerBase : public IMemoryManager 
   {
     public:
     void * Clone(void * ptr, const size_t size, int heap_id = 0) override ;

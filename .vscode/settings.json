@@ -48,7 +48,8 @@
     "map": "c",
     "unordered_map": "c",
     "xhash": "c",
-    "xtree": "c"
+    "xtree": "c",
+    "*.rh": "cpp"
   },
   "C_Cpp.errorSquiggles": "enabled"
 }

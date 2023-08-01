@@ -1,13 +1,13 @@
 #include <cmath>
 
-#include "./cm_graph.hpp"
-#include "./nodes/unary/cm_unary.hpp"
+#include "cm_graph.hpp"
+#include "nodes/unary/cm_unary.hpp"
 
 
 
 namespace CyanMycelium         
 {
-  #define CELU_CODE(x,n) (max(0, x) + min(0, n->alpha * ( exp(x/n->alpha) -1 ) ))
+  #define CELU_CODE(x,n) (max(0, x) + min(0,(n)->Alpha * ( exp(x/(n)->Alpha) -1 ) ))
   
   UNARY_FUNC_TEMPLATE(CELU)
 

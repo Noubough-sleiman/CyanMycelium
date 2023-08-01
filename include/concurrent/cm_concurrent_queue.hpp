@@ -10,12 +10,12 @@ namespace CyanMycelium
    #define CM_DEFAULT_CQ_TIMEOUT 5000
    #define CM_DEFAULT_CQ_NTHREAD 2
    #define CM_DEFAULT_CQ_STACKSIZE 0
-   #define CM_DEFAULT_CQ_PRIORITY LOW
+   #define CM_DEFAULT_CQ_PRIORITY 0
 
 
    struct ConcurrentQueueOptions
    {
-     unsigned int ThreadCound;
+     unsigned int ThreadCount;
      unsigned int WaitTimeout;
      unsigned int StackSize;
      Thread :: Priority Priority;
@@ -45,12 +45,10 @@ namespace CyanMycelium
      // sync
      SemaphorePtr _wait;
      MutexPtr _lock;
-     unsigned int _timeout;
 
      // threading
      ThreadPtr _threads;
-     int _threadCount; 
-     bool _started
+     bool _started;
     };
 
 }

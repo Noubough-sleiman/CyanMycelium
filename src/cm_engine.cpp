@@ -1,4 +1,4 @@
-#include "./cm_engine.hpp"
+#include "cm_engine.hpp"
 
 using namespace CyanMycelium  ;       
 
@@ -46,7 +46,7 @@ void InferenceSession :: RunAsync()
    {
       this->_completionHandle->Take();
 
-      for(int i=0; i != inputs->Count; i++)
+      for(unsigned int i=0; i != inputs->Count(); i++)
       {
         LinkPtr l = (*inputs)[i].Value;
         this->Activate(l->Ofin);
@@ -54,10 +54,11 @@ void InferenceSession :: RunAsync()
    }
 }
 
-int InferenceSession :: WaitForCompletion(unsigned int timeoutmillis = 0 )
+int InferenceSession :: Join(unsigned int timeoutmillis)
 {
-  this->_completionHandle->Take();
+  this->_completionHandle->Take(timeoutmillis);
   this->_completionHandle->Give();
+  return 0;
 }
 
 TensorPtr InferenceSession :: GetOutput(const char * name)
@@ -83,17 +84,17 @@ bool InferenceSession :: Activate(LinkPtr l, void * data)
     return false;
   }
 
-  NodePtr nextNode = l->ofin ;
+  NodePtr nextNode = l->Ofin ;
   if(nextNode) 
   {
     // this is NOT a terminal link
-    if(nextNode->Opsc.Count > 1)
+    if(nextNode->Opsc.Count() > 1)
     {
       // we need to synchronize and potentially activate the node
       MutexPtr lock = nextNode->GetLock();
       if(lock) lock->Take();
       l->Payload.Data = data;
-      if(__AreLinkReady(&nextNode->opsc))
+      if(__AreLinkReady(&nextNode->Opsc))
       {
         this->Activate(nextNode);
       }
@@ -111,7 +112,7 @@ bool InferenceSession :: Activate(LinkPtr l, void * data)
   l->Payload.Data = data;
   if(this->_completionHandle)
   {
-    if( this->_model->outputs.Count > 1)
+    if( this->_model->outputs.Count() > 1)
     {
       if(!__AreLinkReady(&this->_model->outputs)) return true;
     }
@@ -127,7 +128,7 @@ bool InferenceSession :: Activate(NodePtr)
 
 bool __AreLinkReady(Collection<LinkPtr> * links)
 {
-  for(int i=0; i != links->Count; i++)
+  for(unsigned int i=0; i != links->Count(); i++)
   {
     LinkPtr l = (*links)[i];
     if( l && l->Payload.Data == nullptr) return false ;
@@ -137,7 +138,7 @@ bool __AreLinkReady(Collection<LinkPtr> * links)
 
 bool __AreLinkReady(KeyValueCollection<LinkPtr> * links)
 {
-  for(int i=0; i != links->Count; i++)
+  for(unsigned int i=0; i != links->Count(); i++)
   {
     LinkPtr l = (*links)[i].Value;
     if( l && l->Payload.Data == nullptr) return false;

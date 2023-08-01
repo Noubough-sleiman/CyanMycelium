@@ -46,22 +46,26 @@ namespace CyanMycelium
 
 
     class Tensor {
+        
         public:
+        Tensor() ;        
         /// @brief build a tensor using shape and dimension
         /// @param shape the shape as an array of the size of each dimension
         /// @param dimension the number of axes or indices required to access the elements of the tensor.
-        Tensor(uint32_t * shape, int dimension ) ;
+        Tensor(const uint32_t * shape, int dimension ) ;        
+        Tensor * Set(const uint32_t * shape, int dimension, tensor_data_type_t type =  TDT_UNDEFINED) ;
+
   
         size_t Size;  // size in byte, must be equal to Count * sizeof(type)
         size_t Count; // number of elements
-        uint8_t * Data; // byte array
+        void * Data; // byte array
         tensor_data_type_t Type; // type of underlying elements
         uint8_t Dimension; // dimension of tensor
         uint32_t Shape[TENSOR_MAX_DIMENSION]; // shape of tensor. 
        
-        bool ShapesAreEqual(TensorPtr other);
+        bool ShapesAreEqual(Tensor * other);
 
-        TensorPtr Clone();
+        Tensor * Clone();
     };
 
     typedef Tensor * TensorPtr;

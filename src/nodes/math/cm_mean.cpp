@@ -1,5 +1,5 @@
-#include "./cm_graph.hpp"
-#include "./nodes/math/cm_mean.hpp"
+#include "cm_graph.hpp"
+#include "nodes/math/cm_mean.hpp"
 
 namespace CyanMycelium         
 {

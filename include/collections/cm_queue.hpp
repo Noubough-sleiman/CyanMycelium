@@ -22,7 +22,7 @@ namespace CyanMycelium
       bool IsFull();
 
     private:
-      QueueNode * _arr;       
+      T * _arr;       
       int _capacity ;  // maximum capacity
       int _front;      // front element index into the circular buffer
       int _rear;       // rear element index into the circular buffer

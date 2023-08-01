@@ -9,19 +9,19 @@ namespace CyanMycelium
 
  BINARY_OP_ARRAY_IMPL(ADD,
     nullptr,                         // Placeholder for TDT_UNDEFINED
-    UNARY_FUNCTION_PTR(ADD,float),   // Function for TDT_FLOAT
-    UNARY_FUNCTION_PTR(ADD,uint8_t), // Function for TDT_UINT8
-    UNARY_FUNCTION_PTR(ADD,int8_t),  // Function for TDT_INT8
-    UNARY_FUNCTION_PTR(ADD,uint16_t),// Function for TDT_UINT16
-    UNARY_FUNCTION_PTR(ADD,int16_t), // Function for TDT_INT16
-    UNARY_FUNCTION_PTR(ADD,int32_t), // Function for TDT_INT32
-    UNARY_FUNCTION_PTR(ADD,int64_t), // Function for TDT_INT64
+    BINARY_FUNCTION_PTR(ADD,float),   // Function for TDT_FLOAT
+    BINARY_FUNCTION_PTR(ADD,uint8_t), // Function for TDT_UINT8
+    BINARY_FUNCTION_PTR(ADD,int8_t),  // Function for TDT_INT8
+    BINARY_FUNCTION_PTR(ADD,uint16_t),// Function for TDT_UINT16
+    BINARY_FUNCTION_PTR(ADD,int16_t), // Function for TDT_INT16
+    BINARY_FUNCTION_PTR(ADD,int32_t), // Function for TDT_INT32
+    BINARY_FUNCTION_PTR(ADD,int64_t), // Function for TDT_INT64
     nullptr,                         // Function for TDT_STRING
     nullptr,                         // Function for TDT_BOOL
     nullptr,                         // Function for TDT_FLOAT16
-    UNARY_FUNCTION_PTR(ADD,double),  // Function for TDT_DOUBLE
-    UNARY_FUNCTION_PTR(ADD,uint32_t),// Function for TDT_UINT32
-    UNARY_FUNCTION_PTR(ADD,uint64_t),// Function for TDT_UINT64
+    BINARY_FUNCTION_PTR(ADD,double),  // Function for TDT_DOUBLE
+    BINARY_FUNCTION_PTR(ADD,uint32_t),// Function for TDT_UINT32
+    BINARY_FUNCTION_PTR(ADD,uint64_t),// Function for TDT_UINT64
     nullptr,                         // Function for TDT_COMPLEX64
     nullptr,                         // Function for TDT_COMPLEX128
     nullptr,                         // Function for TDT_BFLOAT16

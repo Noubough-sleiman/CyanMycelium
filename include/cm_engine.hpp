@@ -31,7 +31,7 @@ namespace CyanMycelium
     /// @brief 
     /// @param name 
     /// @return 
-    TensorPtr GetInput(const char * name);
+    TensorPtr GetInput(const char * name = nullptr);
 
     /// @brief 
     void RunAsync();
@@ -40,16 +40,16 @@ namespace CyanMycelium
     /// the outputs available or timeout occurs
     /// @param timeoutmillis optional timeout in milli seconds
     /// @return 0 for scucces, error code otherwise
-    int WaitForCompletion(unsigned int timeoutmillis = 0 );
+    int Join(unsigned int timeoutmillis = 0 );
 
     /// @brief 
     /// @param name 
     /// @return 
-    TensorPtr GetOutput(const char * name);
+    TensorPtr GetOutput(const char * name = nullptr);
 
     /// @brief Reset the session in order to reuse it
     /// @return 
-    InferenceSessionPtr Reset();
+    InferenceSession * Reset();
 
     /// @brief 
     /// @param  

@@ -1,6 +1,6 @@
 #ifndef __CYAN_MISCELIUM_NODE_LSTM__
 #define __CYAN_MISCELIUM_NODE_LSTM__
-#include "./cm_graph.hpp"
+#include "cm_graph.hpp"
 
 namespace CyanMycelium
 {

@@ -1,21 +1,32 @@
-#include "./math/cm_tensor.hpp"
+#include "math/cm_tensor.hpp"
 
 namespace CyanMycelium         
 {
-  Tensor::Tensor(uint32_t * shape, int dimension ) 
+  Tensor::Tensor( ) 
+  {
+    Set(nullptr,1);
+  };
+
+  Tensor::Tensor(const uint32_t * shape, int dimension ) 
+  {
+    Set(shape,dimension);
+  };
+
+  TensorPtr Tensor::Set(const uint32_t * shape, int dimension, tensor_data_type_t type) 
   {
       uint8_t d = dimension < TENSOR_MAX_DIMENSION ? dimension : TENSOR_MAX_DIMENSION;
       size_t c = 1;
       for(int i=0; i != d; i++)
       {
-        this->Shape[i] = shape[i];
-        c *= this->Shape[i];
+        Shape[i] = shape ? shape[i] : 1;
+        c *= Shape[i];
       }
-      this->Dimension = d;
-      this->Count = c;
-      this->Size = 0;
-      this->Data = nullptr;
-      this->Type = TDT_UNDEFINED;
+      Dimension = d;
+      Count = c;
+      Size = 0;
+      Data = nullptr;
+      Type = type;
+      return this;
   };
 
   bool Tensor::ShapesAreEqual(TensorPtr other){
