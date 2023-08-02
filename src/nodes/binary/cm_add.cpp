@@ -3,7 +3,7 @@
 
 namespace CyanMycelium         
 {
- #define ADD_CODE(a,b, n) (a + b)
+ #define ADD_CODE(a,b) (a + b)
   
  BINARY_FUNC_TEMPLATE(ADD)
 

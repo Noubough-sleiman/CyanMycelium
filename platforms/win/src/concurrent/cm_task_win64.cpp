@@ -4,7 +4,7 @@
 
 using namespace CyanMycelium;
 
-    Thread :: Thread(thread_start_routine_fn fn, unsigned int stack_size = 0, void* params = NULL,Priority priority = Priority::LOW)
+    Thread :: Thread(thread_start_routine_fn fn, unsigned int stack_size, void* params,Priority priority)
     {
        _handle = CreateThread(
            NULL, // default security attributes

@@ -6,7 +6,7 @@
 
 namespace CyanMycelium         
 {
-  #define ASINH_CODE(a,n) asinh(a)
+  #define ASINH_CODE(a) asinh(a)
   
   UNARY_FUNC_TEMPLATE(ASINH)
 

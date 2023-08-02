@@ -4,7 +4,7 @@
 
 using namespace CyanMycelium;
 
-    Mutex :: Mutex(bool initially_owned = false)
+    Mutex :: Mutex(bool initially_owned )
     {
     _handle = CreateMutex( 
         NULL,  // default security attributes
@@ -20,7 +20,7 @@ using namespace CyanMycelium;
         }
     }
     
-    bool Mutex :: Take(unsigned int timeout_millis = 0)
+    bool Mutex :: Take(unsigned int timeout_millis)
     {
         DWORD dwWaitResult = WaitForSingleObject( _handle, timeout_millis ); 
         return (dwWaitResult == WAIT_OBJECT_0);
@@ -51,13 +51,13 @@ using namespace CyanMycelium;
         }
     }
 
-    bool Semaphore :: Take(unsigned int timeout_millis = 0)
+    bool Semaphore :: Take(unsigned int timeout_millis)
     {
         DWORD dwWaitResult = WaitForSingleObject( _handle, timeout_millis ); 
         return (dwWaitResult == WAIT_OBJECT_0);    
     }
 
-    void Semaphore :: Give(unsigned int count = 1)
+    void Semaphore :: Give(unsigned int count)
     {
         if( _handle)
         {

@@ -7,7 +7,7 @@
 
 namespace CyanMycelium         
 {
-  #define ACOS_CODE(a,n) acos(a)
+  #define ACOS_CODE(a) acos(a)
   
   UNARY_FUNC_TEMPLATE(ACOS)
 

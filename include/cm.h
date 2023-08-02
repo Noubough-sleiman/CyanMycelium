@@ -36,7 +36,7 @@
 
 #if defined(_WIN64)
     /* Microsoft Windows (64-bit) */
-    #include "win/include/cm_win64.h"
+    #include "cm_win64.h"
 #elif defined(_WIN32)
     /* Microsoft Windows (32-bit) */
 #endif

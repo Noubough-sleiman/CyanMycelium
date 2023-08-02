@@ -4,8 +4,7 @@
       "name": "Win32",
       "includePath": [
         "${workspaceFolder}/include",
-        "${workspaceFolder}/platforms",
-        "${workspaceFolder}/libs"
+        "${workspaceFolder}/platforms/win/include"
       ],
       "defines": ["_DEBUG", "UNICODE", "_UNICODE"],
       "windowsSdkVersion": "10.0.19041.0",

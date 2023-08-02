@@ -9,7 +9,7 @@ namespace CyanMycelium
 {
   #define CELU_CODE(x,n) (max(0, x) + min(0,(n)->Alpha * ( exp(x/(n)->Alpha) -1 ) ))
   
-  UNARY_FUNC_TEMPLATE(CELU)
+  UNARY_FUNC_TEMPLATE_WITH_NODE(CELU)
 
   // according to onnx documentation, Constrain input and output types to float32 tensors.
   UNARY_OP_ARRAY_IMPL(CELU,

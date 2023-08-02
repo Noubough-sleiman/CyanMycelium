@@ -6,7 +6,7 @@
 
 namespace CyanMycelium         
 {
-  #define ASIN_CODE(a,n) asin(a)
+  #define ASIN_CODE(a) asin(a)
   
   UNARY_FUNC_TEMPLATE(ASIN)
 

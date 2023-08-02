@@ -20,7 +20,6 @@ namespace CyanMycelium
   #define WHERE Where
   #define XOR Xor
 
-  // NOTE : We should implements Broadcasting, similar to Numpy.
   BINARY_OP_DECL(ADD)
   BINARY_OP_DECL(AND)
   BINARY_OP_DECL(DIV)

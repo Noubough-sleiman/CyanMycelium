@@ -7,7 +7,7 @@
 
 namespace CyanMycelium         
 {
-  #define ACOSH_CODE(a,n) acosh(a)
+  #define ACOSH_CODE(a) acosh(a)
   
   UNARY_FUNC_TEMPLATE(ACOSH)
 

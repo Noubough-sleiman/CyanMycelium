@@ -3,7 +3,7 @@
 
 namespace CyanMycelium         
 {
- #define AND_CODE(a,b, n) (a && b)
+ #define AND_CODE(a,b) (a && b)
   
  BINARY_FUNC_TEMPLATE(AND)
 
