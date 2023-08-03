@@ -74,25 +74,19 @@ namespace CyanMycelium
     class Node : public GraphItem
     {
     public:
-        Node()
+        Node() : _lock()
         {
-            _lock = new Mutex();
-        }
-
-        ~Node()
-        {
-            delete (_lock);
         }
         LinkCollection Opsc;
         LinkCollection Onsc;
         MutexPtr GetLock()
         {
-            return _lock;
+            return &_lock;
         }
         virtual bool Activate(IActivationCtxPtr ctx) = 0;
 
     private:
-        MutexPtr _lock;
+        Mutex _lock;
     };
 
     typedef Node *NodePtr;

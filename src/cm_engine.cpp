@@ -13,22 +13,6 @@ bool __AreLinkReady(Collection<LinkPtr> *links);
 /// @return true if all the payloads are ready -ie : have data != nullptr
 bool __AreLinkReady(KeyValueCollection<LinkPtr> *links);
 
-InferenceSession ::InferenceSession(GraphPtr model, IMemoryManagerPtr mm) : IActivationCtx(mm)
-{
-  this->_model = model;
-  // set the mutex
-  _completionHandle = new Mutex();
-}
-
-InferenceSession ::~InferenceSession()
-{
-  // clear the mutex
-  if (_completionHandle)
-  {
-    delete (_completionHandle);
-  }
-}
-
 TensorPtr InferenceSession ::GetInput(const char *name, boolean autoAllocateBuffer)
 {
   LinkPtr l = this->_model->inputs[name];
@@ -49,7 +33,7 @@ void InferenceSession ::RunAsync()
   KeyValueCollection<LinkPtr> *inputs = &this->_model->inputs;
   if (__AreLinkReady(inputs))
   {
-    this->_completionHandle->Take();
+    _completionHandle.Take();
 
     int c = inputs->Count();
     for (int i = 0; i != c; i++)
@@ -62,8 +46,8 @@ void InferenceSession ::RunAsync()
 
 int InferenceSession ::Join(unsigned int timeoutmillis)
 {
-  this->_completionHandle->Take(timeoutmillis);
-  this->_completionHandle->Give();
+  _completionHandle.Take(timeoutmillis);
+  _completionHandle.Give();
   return 0;
 }
 
@@ -118,15 +102,12 @@ bool InferenceSession ::Activate(LinkPtr l, void *data)
 
   // this is a terminal link, so update the completion mutex accordingly
   l->Activate(this, data);
-  if (this->_completionHandle)
+  if (this->_model->outputs.Count() > 1)
   {
-    if (this->_model->outputs.Count() > 1)
-    {
-      if (!__AreLinkReady(&this->_model->outputs))
-        return true;
-    }
-    this->_completionHandle->Give();
+    if (!__AreLinkReady(&this->_model->outputs))
+      return true;
   }
+  _completionHandle.Give();
   return true;
 }
 

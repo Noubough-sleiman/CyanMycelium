@@ -25,8 +25,15 @@ namespace CyanMycelium
     /// @brief
     InferenceSessionStatus State;
 
-    InferenceSession(GraphPtr model, IMemoryManagerPtr mm);
-    ~InferenceSession();
+    InferenceSession(GraphPtr model, IMemoryManagerPtr mm) : IActivationCtx(mm), _completionHandle(), _queue(model->Nodes.Count())
+    {
+      _model = model;
+    };
+
+    ~InferenceSession()
+    {
+      // fields destructors are called automatically.
+    }
 
     /// @brief
     /// @param name
@@ -64,7 +71,8 @@ namespace CyanMycelium
 
   private:
     GraphPtr _model;
-    MutexPtr _completionHandle;
+    Mutex _completionHandle;
+    Queue<NodePtr> _queue;
   };
 
   typedef InferenceSession *InferenceSessionPtr;
