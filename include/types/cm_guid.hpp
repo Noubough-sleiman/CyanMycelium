@@ -1,28 +1,29 @@
 #ifndef __GUID_H
-#define	__GUID_H
+#define __GUID_H
 
 #include <stdint.h>
 #include <stdbool.h>
 
-namespace CyanMycelium {
+namespace CyanMycelium
+{
 	class Guid
 	{
 	public:
-	    static Guid Empty;
+		static Guid Empty;
 
 		Guid(bool set = false);
-		int ToString(char * dest, int length);
-		bool operator= (Guid * b);
+		int ToString(char *dest, int length);
+		bool operator=(Guid *b);
 		bool IsEmpty();
 		void Clear();
 		void Set();
 
-		static Guid * FromString(const char * src);
-		static Guid * Create();
-		static int CreateString(char * dest, int length);
+		static Guid *FromString(const char *src);
+		static Guid *Create();
+		static int CreateString(char *dest, int length);
 
-		uint8_t operator [](int idx) const;
-		uint8_t& operator [](int idx);
+		uint8_t operator[](int idx) const;
+		uint8_t &operator[](int idx);
 
 	private:
 		union

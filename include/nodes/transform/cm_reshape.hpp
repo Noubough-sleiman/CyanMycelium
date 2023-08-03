@@ -4,13 +4,14 @@
 
 namespace CyanMycelium
 {
-   #define ALLOW_ZERO_DEFAULT 0
+#define ALLOW_ZERO_DEFAULT 0
 
-  /// @brief Reshape the input tensor similar to numpy.reshape. 
+  /// @brief Reshape the input tensor similar to numpy.reshape.
   /// @link https://onnx.ai/onnx/operators/onnx__Reshape.html
-  class Reshape : Operator { 
-    public: 
-    int8_t AllowZero = ALLOW_ZERO_DEFAULT ; 
+  class Reshape : Operator
+  {
+  public:
+    int8_t AllowZero = ALLOW_ZERO_DEFAULT;
     Reshape() : Operator(){};
     bool Activate() override;
   };

@@ -4,8 +4,9 @@
 
 namespace CyanMycelium
 {
-  class LSTM : Operator { 
-    public: 
+  class LSTM : Operator
+  {
+  public:
     LSTM() : Operator(){};
     bool Activate(IActivationCtxPtr ctx) override;
   };

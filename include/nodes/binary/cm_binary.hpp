@@ -4,21 +4,21 @@
 
 namespace CyanMycelium
 {
-  #define ADD Add
-  #define AND And
-  #define DIV Div
-  #define EQUAL Equal
-  #define GREATER Greater
-  #define LESS Less   
-  #define MAX Max   
-  #define MEAN Mean
-  #define MIN Min   
-  #define MULT Mult   
-  #define OR Or
-  #define POW Pow
-  #define SUB Sub
-  #define WHERE Where
-  #define XOR Xor
+#define ADD Add
+#define AND And
+#define DIV Div
+#define EQUAL Equal
+#define GREATER Greater
+#define LESS Less
+#define MAX Max
+#define MEAN Mean
+#define MIN Min
+#define MULT Mult
+#define OR Or
+#define POW Pow
+#define SUB Sub
+#define WHERE Where
+#define XOR Xor
 
   BINARY_OP_DECL(ADD)
   BINARY_OP_DECL(AND)

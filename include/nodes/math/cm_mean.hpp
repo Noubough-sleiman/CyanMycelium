@@ -4,7 +4,7 @@
 
 namespace CyanMycelium
 {
-   /// @brief Reshape the input tensor similar to numpy.reshape. 
+   /// @brief Reshape the input tensor similar to numpy.reshape.
    /// @link https://onnx.ai/onnx/operators/onnx__Reshape.html
    UNARY_OP_DECL(Mean)
 }

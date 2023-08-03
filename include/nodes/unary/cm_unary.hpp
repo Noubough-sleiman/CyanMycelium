@@ -4,21 +4,21 @@
 
 namespace CyanMycelium
 {
-   #define ABS Abs
-   #define ACOS Acos
-   #define ACOSH Acosh
-   #define ASIN Asin
-   #define ASINH Asinh
-   #define ATAN Atan   
-   #define ATANH Atanh   
-   #define CEIL Ceil
-   #define CELU Celu   
-   #define COS Cos   
-   #define COSH Cosh
-   #define ELU Elu
-   #define EXP Exp
-   #define FLOOR Floor
-   
+#define ABS Abs
+#define ACOS Acos
+#define ACOSH Acosh
+#define ASIN Asin
+#define ASINH Asinh
+#define ATAN Atan
+#define ATANH Atanh
+#define CEIL Ceil
+#define CELU Celu
+#define COS Cos
+#define COSH Cosh
+#define ELU Elu
+#define EXP Exp
+#define FLOOR Floor
+
    UNARY_OP_DECL(ABS)
    UNARY_OP_DECL(ACOS)
    UNARY_OP_DECL(ACOSH)

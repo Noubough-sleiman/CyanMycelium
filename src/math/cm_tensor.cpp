@@ -1,50 +1,67 @@
 #include "math/cm_tensor.hpp"
 
-namespace CyanMycelium         
+namespace CyanMycelium
 {
-  Tensor::Tensor( ) 
-  {
-    Set(nullptr,1);
+  size_t __TensorData_sizes__[TDT_COUNT] = {
+      1,
+      4,              // float
+      1,              // uint 8
+      1,              // int 8
+      2,              // uint 16
+      2,              // int 16
+      4,              // int 32
+      8,              // int 64
+      sizeof(void *), // string
+      1,              // bool
+      2,              // half float
+      8,              // double
+      4,              // uint 32
+      8,              // uint 64
+      8,              // complex 64
+      16,             // complex 128
+      2,              // float 16
+      8, 8, 8, 8,     // float 8
   };
 
-  Tensor::Tensor(const uint32_t * shape, int dimension ) 
+  size_t __GetSizeType(tensor_data_type_t type)
   {
-    Set(shape,dimension);
+    return __TensorData_sizes__[(int)type];
+  }
+
+  TensorPtr Tensor::Set(const uint32_t *shape, int dimension, tensor_data_type_t type)
+  {
+    uint8_t d = dimension < TENSOR_MAX_DIMENSION ? dimension : TENSOR_MAX_DIMENSION;
+    size_t c = 1;
+    for (int i = 0; i != d; i++)
+    {
+      Shape[i] = shape ? shape[i] : 1;
+      c *= Shape[i];
+    }
+    Dimension = d;
+    Count = c;
+    Size = c * __GetSizeType(type);
+    Data = nullptr;
+    Type = type;
+    return this;
   };
 
-  TensorPtr Tensor::Set(const uint32_t * shape, int dimension, tensor_data_type_t type) 
+  bool Tensor::ShapesAreEqual(TensorPtr other)
   {
-      uint8_t d = dimension < TENSOR_MAX_DIMENSION ? dimension : TENSOR_MAX_DIMENSION;
-      size_t c = 1;
-      for(int i=0; i != d; i++)
-      {
-        Shape[i] = shape ? shape[i] : 1;
-        c *= Shape[i];
-      }
-      Dimension = d;
-      Count = c;
-      Size = 0;
-      Data = nullptr;
-      Type = type;
-      return this;
-  };
 
-  bool Tensor::ShapesAreEqual(TensorPtr other){
-    
-    if(other == nullptr || this->Dimension != other->Dimension)
+    if (other == nullptr || this->Dimension != other->Dimension)
     {
       return false;
     }
 
     // fast track
-    if( this->Dimension == 1)
+    if (this->Dimension == 1)
     {
       return this->Shape[0] == other->Shape[0];
     }
 
-    for(int i=0; i != this->Dimension; i++)
+    for (int i = 0; i != this->Dimension; i++)
     {
-      if(this->Shape[i] != other->Shape[i])
+      if (this->Shape[i] != other->Shape[i])
       {
         return false;
       }

@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "(gdb) Decode",
+      "name": "Debug simple graph sample.",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/test/decode.exe",
+      "program": "${workspaceFolder}/bin/debug/samples/test_simple_graph.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",
@@ -13,14 +13,7 @@
       "externalConsole": false,
       "MIMode": "gdb",
       "miDebuggerPath": "gdb.exe",
-      "setupCommands": [
-        {
-          "description": "Enable pretty-printing for gdb",
-          "text": "-enable-pretty-printing",
-          "ignoreFailures": true
-        }
-      ],
-      "preLaunchTask": "BuildDebug"
+      "preLaunchTask": "Build Debug"
     }
   ]
 }
