@@ -46,7 +46,8 @@ void InferenceSession :: RunAsync()
    {
       this->_completionHandle->Take();
 
-      for(unsigned int i=0; i != inputs->Count(); i++)
+      int c = inputs->Count();
+      for(int i=0; i != c; i++)
       {
         LinkPtr l = (*inputs)[i].Value;
         this->Activate(l->Ofin);
@@ -128,7 +129,8 @@ bool InferenceSession :: Activate(NodePtr)
 
 bool __AreLinkReady(Collection<LinkPtr> * links)
 {
-  for(unsigned int i=0; i != links->Count(); i++)
+  int c = links->Count();
+  for(int i=0; i != c; i++)
   {
     LinkPtr l = (*links)[i];
     if( l && l->Payload.Data == nullptr) return false ;
@@ -138,7 +140,8 @@ bool __AreLinkReady(Collection<LinkPtr> * links)
 
 bool __AreLinkReady(KeyValueCollection<LinkPtr> * links)
 {
-  for(unsigned int i=0; i != links->Count(); i++)
+  int c = links->Count();
+  for(int i=0; i != c; i++)
   {
     LinkPtr l = (*links)[i].Value;
     if( l && l->Payload.Data == nullptr) return false;

@@ -66,6 +66,11 @@ namespace CyanMycelium
     /// @brief 
     class LinkCollection : public Collection<LinkPtr>
     {
+        public:
+        LinkCollection(unsigned int initialCapacity = 2): Collection<LinkPtr>(initialCapacity)
+        {
+            
+        }    
     };
 
     /// @brief 
@@ -89,6 +94,10 @@ namespace CyanMycelium
     /// @brief 
     class NodeCollection : public Collection<NodePtr>
     {
+        public:
+        NodeCollection(unsigned int initialCapacity = 2): Collection<NodePtr>(initialCapacity)
+        {
+        }
     };
 
     /// @brief 

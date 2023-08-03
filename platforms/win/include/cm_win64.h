@@ -17,10 +17,10 @@ extern "C" {
 #define cm_memset memset
 #define cm_rand rand
 
-#define cm_memcpy(copy, ptr, size) memcpy(copy, ptr, size)
-#define cm_malloc(size) malloc(size)
-#define cm_realloc(ptr, size) realloc(ptr, size)
-#define cm_free(ptr) free(ptr)
+#define cm_memcpy(copy, ptr, size) memcpy((copy), (ptr), (size))
+#define cm_malloc(size) malloc((size))
+#define cm_realloc(ptr, size) realloc((ptr), (size))
+#define cm_free(ptr) free((ptr))
 
 
 #ifdef __cplusplus

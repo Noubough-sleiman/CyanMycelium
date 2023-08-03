@@ -1,17 +1,10 @@
 {
   "tasks": [
     {
-      "label": "Print sources and build files path",
+      "label": "Compile Release",
       "type": "shell",
       "command": "mingw32-make",
-      "args": ["print_files"],
-      "problemMatcher": []
-    },
-    {
-      "label": "Build Release",
-      "type": "shell",
-      "command": "mingw32-make",
-      "args": [],
+      "args": ["compile"],
       "problemMatcher": ["$gcc"]
     },
     {
@@ -22,16 +15,16 @@
       "problemMatcher": []
     },
     {
-      "label": "Rebuild Release",
+      "label": "Recompile Release",
       "dependsOrder": "sequence",
-      "dependsOn": ["Clean Release", "Build Release"],
+      "dependsOn": ["Clean Release", "Compile Release"],
       "problemMatcher": []
     },
     {
-      "label": "Build Debug",
+      "label": "Compile Debug",
       "type": "shell",
       "command": "mingw32-make",
-      "args": ["DEBUG=true"],
+      "args": ["compile", "DEBUG=true"],
       "problemMatcher": ["$gcc"]
     },
     {
@@ -42,9 +35,16 @@
       "problemMatcher": []
     },
     {
-      "label": "Rebuild Debug",
+      "label": "Build Debug",
+      "type": "shell",
+      "command": "mingw32-make",
+      "args": ["V=1", "link", "DEBUG=true"],
+      "problemMatcher": ["$gcc"]
+    },
+    {
+      "label": "Recompile Debug",
       "dependsOrder": "sequence",
-      "dependsOn": ["Clean Debug", "Build Debug"],
+      "dependsOn": ["Clean Debug", "Compile Debug"],
       "problemMatcher": []
     }
   ],

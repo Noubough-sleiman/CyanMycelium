@@ -6,7 +6,6 @@ ifdef DEBUG
     CFLAGS += -g
 endif
 
-
 HEADER_DIR := include
 SRC_DIR := src
 
@@ -14,9 +13,7 @@ PLATFORM = win
 PLATFORM_DIR= platforms
 PLATFORMS_HEADER_DIR := $(PLATFORM_DIR)/$(PLATFORM)/$(HEADER_DIR)
 PLATFORMS_SRC_DIR := $(PLATFORM_DIR)/$(PLATFORM)/$(SRC_DIR)
-
-TEST_DIR := test
-LIB_DIR := libs
+SAMPLES_DIR := samples
 
 ifdef DEBUG
     BUILD_DIR :=  obj/debug
@@ -32,15 +29,23 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2)$(filter $(subst *
 # List of source files (using recursive wildcard)
 ifeq ($(PLATFORM),win)
     SRC_FILES = $(foreach d,$(SRC_DIR),$(call rwildcard,$d/,*.cpp))
-    SRC_FILES += $(foreach d,$(PLATFORMS_SRC_DIR),$(call rwildcard,$d/,*.cpp))
+    PLATFORMS_SRC_FILES = $(foreach d,$(PLATFORMS_SRC_DIR),$(call rwildcard,$d/,*.cpp))
+    SAMPLES_FILES = $(foreach d,$(SAMPLES_DIR),$(call rwildcard,$d/,*.cpp))
 else
     SRC_FILES = $(call rwildcard,$(SRC_DIR)/,*.cpp)
-    SRC_FILES += $(call rwildcard,$(PLATFORMS_SRC_DIR)/,*.cpp)
+    PLATFORMS_SRC_FILES = $(call rwildcard,$(PLATFORMS_SRC_DIR)/,*.cpp)
+    SAMPLES_FILES = $(call rwildcard,$(SAMPLES_DIR)/,*.cpp)
 endif
 
-# Generate a list of object file names by replacing .cpp with .o
+
+# Generate a list of object file names by replacing .cpp with .o or .exe
+PLATFORMS_OBJ_FILES = $(patsubst $(PLATFORMS_SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(PLATFORMS_SRC_FILES))
+SAMPLES_OBJ_FILES = $(patsubst $(SAMPLES_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SAMPLES_FILES))
+SAMPLES_EXE_FILES = $(patsubst $(SAMPLES_DIR)/%.cpp, $(BIN_DIR)/%.exe, $(SAMPLES_FILES))
+
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
-OBJ_FILES += $(patsubst $(PLATFORMS_SRC_DIR)/%.cpp, $(BUILD_DIR)/%.o, $(SRC_FILES))
+OBJ_FILES += $(PLATFORMS_OBJ_FILES)
+OBJ_FILES += $(SAMPLES_OBJ_FILES)
 
 # Platform-specific settings
 ifeq ($(PLATFORM),win)
@@ -52,10 +57,11 @@ else
 endif
 
 # PHONY targets to avoid conflicts with file names
-.PHONY: all clean
+.PHONY: all clean link
 
 # Default target
-all: $(OBJ_FILES)
+compile: $(OBJ_FILES)
+
 # Rule to build object files from CPP source files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	-$(MKDIR) $(subst /,\,$(@D))
@@ -65,7 +71,18 @@ $(BUILD_DIR)/%.o: $(PLATFORMS_SRC_DIR)/%.cpp
 	-$(MKDIR) $(subst /,\,$(@D))
 	-$(COMPILER) -I$(HEADER_DIR) -I$(PLATFORMS_HEADER_DIR) $(CFLAGS) -c $< -o $@
 
+$(BUILD_DIR)/%.o: $(SAMPLES_DIR)/%.cpp
+	-$(MKDIR) $(subst /,\,$(@D))
+	-$(COMPILER) -I$(HEADER_DIR) -I$(PLATFORMS_HEADER_DIR) $(CFLAGS) -c $< -o $@
+
+# build all samples executables
+link: $(SAMPLES_EXE_FILES)
+
+$(SAMPLES_EXE_FILES): $(OBJ_FILES)
+	-$(MKDIR) $(subst /,\,$(@D))
+	-$(COMPILER) -I$(HEADER_DIR) -I$(PLATFORMS_HEADER_DIR) $(CFLAGS) $(OBJ_FILES) -o $@
 
 # Clean rule to remove object files and the executable
 clean:
 	-$(RM) $(subst /,\,$(BUILD_DIR))
+

@@ -3,23 +3,19 @@
 #include "cm_engine_mem.hpp"
 #include "nodes/unary/cm_unary.hpp"
 
+#include <cstdlib>
+
 using namespace CyanMycelium;
 
-#include <random>
-
 float* GenerateTimeSeries(const int rows, const int cols, float from, float to) {
-
-    // Create a random number generator
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<float> distribution(from, to);
 
     // Allocate memory for the array
     float* timeSeries = new float[rows * cols];
 
     // Generate random float values and fill the array
     for (int i = 0; i < rows * cols; ++i) {
-        timeSeries[i] = distribution(gen);
+        int v = rand() % 100 + 1;
+        timeSeries[i] = from + (to-from) * v ;
     }
 
     return timeSeries;
@@ -70,8 +66,6 @@ int main()
     {
       inputTensor->Data = GenerateTimeSeries(rows, cols, -100, 10);
     } while(! IsNegativeValue((float *)inputTensor->Data, inputTensor->Count)) ;
-    
-    fprintf(stderr, "Input contains negative values.\n");
 
     // start inference
     session->RunAsync();
@@ -81,6 +75,5 @@ int main()
     TensorPtr outputTensor = session->GetOutput("output");
     if(!IsNegativeValue((float *)outputTensor->Data, outputTensor->Count))
     {
-        fprintf(stderr, "Success, ouput do not contains negative values.\n");
     }
 }
