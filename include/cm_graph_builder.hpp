@@ -1,5 +1,5 @@
-#ifndef __CYAN_MISCELIUM_GRAPH_BUILDER__
-#define __CYAN_MISCELIUM_GRAPH_BUILDER__
+#ifndef _CM_GRAPH_BUILDER__
+#define _CM_GRAPH_BUILDER__
 
 #include "cm_graph.hpp"
 

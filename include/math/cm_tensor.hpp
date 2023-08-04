@@ -1,5 +1,5 @@
-#ifndef __CYAN_MISCELIUM_TENSOR__
-#define __CYAN_MISCELIUM_TENSOR__
+#ifndef _CM_TENSOR__
+#define _CM_TENSOR__
 #include <cstdint>
 
 namespace CyanMycelium

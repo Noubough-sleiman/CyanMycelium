@@ -1,6 +1,6 @@
 
-#ifndef __CYAN_MISCELIUM_NODE_COMMONS__
-#define __CYAN_MISCELIUM_NODE_COMMONS__
+#ifndef _CM_NODE_COMMONS__
+#define _CM_NODE_COMMONS__
 
 namespace CyanMycelium
 {

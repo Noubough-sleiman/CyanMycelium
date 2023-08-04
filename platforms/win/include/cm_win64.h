@@ -1,17 +1,21 @@
-#ifndef __CYAN_MISCELIUM_WIN64__
-#define __CYAN_MISCELIUM_WIN64__
-
+#ifndef _CM_WIN64__
+#define _CM_WIN64__
 
 #include <stdlib.h>
 #include <windows.h>
 #include <string.h>
+#include "concurrent/cm_embedded_queue_win64.hpp"
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
+#define CM_INFINITE 0xFFFFFFFF
+#define CM_POLL 0x00000000
+
 #define cm_semaphore_t HANDLE
-#define cm_mutex_t HANDLE    
+#define cm_mutex_t HANDLE
 #define cm_thread_t HANDLE
 
 #define cm_memset memset
@@ -22,6 +26,7 @@ extern "C" {
 #define cm_realloc(ptr, size) realloc((ptr), (size))
 #define cm_free(ptr) free((ptr))
 
+#define cm_queue_handle_t EmbeddedQueuePtr
 
 #ifdef __cplusplus
 }

@@ -1,187 +1,249 @@
-#ifndef __CYAN_MISCELIUM_COLLECTIONS__
-#define __CYAN_MISCELIUM_COLLECTIONS__
+#ifndef __CM_COLLECTIONS__
+#define __CM_COLLECTIONS__
 
 #include "cm.h"
 
 namespace CyanMycelium
 {
-  template<typename T>
-  class  Collection 
+  template <typename T>
+  class Collection
   {
+  public:
+    template <typename V>
+    class Iterator
+    {
     public:
-      class Iterator
+      Iterator(Collection<T> *src)
       {
-        public:
-          Iterator(Collection<T> * src)
-          {
-            _src = src ;
-            Reset();
-          };
-
-          boolean MoveNext()
-          {
-            int c = _src->Count();
-            if( _i < c)
-            {
-             _i++;
-            }
-            return _i < c;
-          };
-
-          virtual T * Current() 
-          { 
-            return _i >= 0 ? _src->_items+_i : nullptr; 
-          };
-
-          void Reset() 
-          {
-            _i = -1;
-          };
-
-        protected:
-          int _i;
-          Collection<T> * _src;
+        _src = src;
+        Reset();
       };
 
-      Collection(unsigned int initialCapacity = 2)
+      boolean MoveNext()
       {
-        _items = nullptr;
-        SetCapacity(max(initialCapacity,2));
-        _count = 0;
-      };
-
-      ~Collection()
-      {
-        if(_items)
+        int c = _src->Count();
+        if (_i < c)
         {
-          free(_items);
+          _i++;
         }
+        return _i < c;
       };
 
-      int Count(){ return _count; };
-      
-      T operator[](int i) { return _items[i]; };
-      
-      void Add(T obj)
+      virtual V *Current()
       {
-        EnsureEnoughRoomFor(1);
-        if(_items)
-        {
-          _items[_count++] = obj ;
-        }
+        return _i >= 0 ? _src->_items + _i : nullptr;
       };
 
-      void Trim()
-      {  
-        if(_count != _capacity)
-        {
-          SetCapacity(_count);
-        }
-      };
-
-      bool Contains(T obj)
+      void Reset()
       {
-        if( _count == 0 )
-        {
-          return false;
-        }
-        for(int i=0; i < _count ; ++i)
-        {
-          if( _items[i] == obj )
-          {
-            return true;
-          }
-        }
-        return false;
+        _i = -1;
       };
 
-      Iterator GetIterator(){ return Iterator(this); };
-
-    protected:
-      void EnsureEnoughRoomFor(int n)
+      void To(Collection<V *> *c)
       {
-        int targetCount = _count + n ;
-        int targetCapacity = _capacity;
-        if( targetCount >= targetCapacity)
+        Reset();
+        if (MoveNext())
         {
           do
           {
-            targetCapacity += max(targetCapacity/3, 2);
-          } while (targetCount >= targetCapacity);
-          SetCapacity(targetCapacity);
+            c->Add(Current());
+          } while (MoveNext());
         }
-      };     
+      }
 
-      void SetCapacity(int newCapacity)
+      void ToSingle(Collection<V *> *c)
       {
-        int targetCapacity = max(newCapacity, Count());
-        _items = (T*) cm_realloc(_items, targetCapacity * sizeof(T) );
-        _capacity = _items ? newCapacity : 0;
-      };     
+        Reset();
+        if (MoveNext())
+        {
+          do
+          {
+            V *v = Current();
+            if (c->Contains(v))
+            {
+              continue;
+            }
+            c->Add(v);
+          } while (MoveNext());
+        }
+      }
 
-      T * _items;
-      int _count;
-      int _capacity;
+    protected:
+      int _i;
+      Collection<T> *_src;
+    };
+
+    Collection(unsigned int initialCapacity = 2)
+    {
+      _items = nullptr;
+      SetCapacity(max(initialCapacity, 2));
+      _count = 0;
+    };
+
+    ~Collection()
+    {
+      if (_items)
+      {
+        free(_items);
+      }
+    };
+
+    int Count() { return _count; };
+
+    T operator[](int i) { return _items[i]; };
+
+    void Add(T obj)
+    {
+      EnsureEnoughRoomFor(1);
+      if (_items)
+      {
+        _items[_count++] = obj;
+      }
+    };
+
+    void Trim()
+    {
+      if (_count != _capacity)
+      {
+        SetCapacity(_count);
+      }
+    };
+
+    bool Contains(T obj)
+    {
+      if (_count == 0)
+      {
+        return false;
+      }
+      for (int i = 0; i < _count; ++i)
+      {
+        if (_items[i] == obj)
+        {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    Iterator<T> GetIterator() { return Iterator<T>(this); };
+
+  protected:
+    void EnsureEnoughRoomFor(int n)
+    {
+      int targetCount = _count + n;
+      int targetCapacity = _capacity;
+      if (targetCount >= targetCapacity)
+      {
+        do
+        {
+          targetCapacity += max(targetCapacity / 3, 2);
+        } while (targetCount >= targetCapacity);
+        SetCapacity(targetCapacity);
+      }
+    };
+
+    void SetCapacity(int newCapacity)
+    {
+      int targetCapacity = max(newCapacity, Count());
+      _items = (T *)cm_realloc(_items, targetCapacity * sizeof(T));
+      _capacity = _items ? newCapacity : 0;
+    };
+
+    T *_items;
+    int _count;
+    int _capacity;
   };
 
-  #define KEY_MAX_LENGTH 32
+#define KEY_MAX_LENGTH 32
 
-  template<typename T>
-  struct KeyValue 
+  template <typename T>
+  struct KeyValue
   {
     char Key[KEY_MAX_LENGTH];
     T Value;
   };
 
-  template<typename T>
+  template <typename T>
   class KeyValueCollection : public Collection<KeyValue<T>>
   {
+
+    class ValueIterator : public Collection<KeyValue<T>>::Iterator<T>
+    {
     public:
-      KeyValueCollection(unsigned int initialCapacity = 2): Collection<KeyValue<T>>(initialCapacity){}    
-
-      using Collection<KeyValue<T>>::operator[]; // Bring the base class's operator[] into scope
-      T operator[](const char * key) { return Get(key) ; }
-      T Get(const char * key)
+      ValueIterator(KeyValueCollection c) : Collection<KeyValue<T>>::Iterator<T>(c) {}
+      virtual T *Current() override
       {
-        if(this->_count)
+        return this->_i >= 0 ? &(this->_src->_items + this->_i)->Value : nullptr;
+      }
+    };
+
+    class KeyIterator : public Collection<KeyValue<T>>::Iterator<char *>
+    {
+    public:
+      KeyIterator(KeyValueCollection c) : Collection<KeyValue<T>>::Iterator<char *>(c) {}
+
+      virtual char *Current() override
+      {
+        return this->_i >= 0 ? (this->_src->_items + this->_i)->Key : nullptr;
+      }
+    };
+
+    public : KeyValueCollection(unsigned int initialCapacity = 2) : Collection<KeyValue<T>>(initialCapacity)
+    {
+    }
+
+    using Collection<KeyValue<T>>::operator[]; // Bring the base class's operator[] into scope
+    T operator[](const char *key) { return Get(key); }
+    T Get(const char *key)
+    {
+      if (this->_count)
+      {
+        for (int i = 0; i != this->_count; ++i)
         {
-          for(int i=0; i != this->_count; ++i)
+          KeyValue<T> *current = this->_items + i;
+          if (strcmp(key, current->Key) == 0)
           {
-              KeyValue<T> * current  = this->_items + i;
-              if( strcmp(key,current->Key) == 0)
-              {
-                  return current->Value;
-              }
+            return current->Value;
           }
         }
-        return nullptr;
-      };     
+      }
+      return nullptr;
+    };
 
-      void Set(const char * key, T value)
+    void Set(const char *key, T value)
+    {
+      if (this->_count)
       {
-        if(this->_count)
+        for (int i = 0; i != this->_count; ++i)
         {
-          for(int i=0; i != this->_count; ++i)
+          KeyValue<T> *current = this->_items + i;
+          if (strcmp(key, current->Key) == 0)
           {
-              KeyValue<T> * current  = this->_items + i;
-              if( strcmp(key,current->Key) == 0)
-              {
-                  current->Value = value;
-                  return;
-              }
+            current->Value = value;
+            return;
           }
         }
-        if( this->_count == this->_capacity)
-        {
-          unsigned int c = this->_capacity + max(this->_capacity/3, 2);
-          this->SetCapacity(c);
-        }
-        KeyValue<T> * entry  = this->_items + this->_count;
-        strcpy_s(entry->Key, KEY_MAX_LENGTH, key);
-        entry->Value = value;
-        this->_count++;
-      }      
+      }
+      if (this->_count == this->_capacity)
+      {
+        unsigned int c = this->_capacity + max(this->_capacity / 3, 2);
+        this->SetCapacity(c);
+      }
+      KeyValue<T> *entry = this->_items + this->_count;
+      strcpy_s(entry->Key, KEY_MAX_LENGTH, key);
+      entry->Value = value;
+      this->_count++;
+    }
 
+    ValueIterator Value()
+    {
+      return ValueIterator(this);
+    }
+
+    KeyIterator Keys()
+    {
+      return KeyIterator(this);
+    }
   };
 
 }

@@ -1,5 +1,5 @@
-#ifndef __GUID_H
-#define __GUID_H
+#ifndef _CM_GUID_H
+#define _CM_GUID_H
 
 #include <stdint.h>
 #include <stdbool.h>

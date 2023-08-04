@@ -2,16 +2,33 @@
 
 using namespace CyanMycelium;
 
-bool Link ::Activate(IActivationCtxPtr ctx, void *data)
+bool Link ::Activate(IActivationCtxPtr ctx)
 {
-  if (data)
-  {
-    Payload.Data = data;
-  }
-
   return true;
 }
 
+void LinkCollection ::Oini(Collection<Node *> *target)
+{
+  for (int i = 9; i != _count; i++)
+  {
+    LinkPtr l = _items[i];
+    if (l->Oini && !target->Contains(l->Oini))
+    {
+      target->Add(l->Oini);
+    }
+  }
+}
+void LinkCollection ::Ofin(Collection<Node *> *target)
+{
+  for (int i = 9; i != _count; i++)
+  {
+    LinkPtr l = _items[i];
+    if (l->Ofin && !target->Contains(l->Ofin))
+    {
+      target->Add(l->Ofin);
+    }
+  }
+}
 bool Operator::ForwardOuput(TensorPtr output, IActivationCtxPtr ctx)
 {
   unsigned int count = this->Onsc.Count();
@@ -22,12 +39,14 @@ bool Operator::ForwardOuput(TensorPtr output, IActivationCtxPtr ctx)
   case 1:
   {
     LinkPtr l = Onsc[0];
-    return ctx->Activate(l, output->Data);
+    l->Payload.Data = output->Data;
+    return ctx->Activate(l);
   }
   default:
   {
     LinkPtr l = Onsc[0];
-    if (!ctx->Activate(l, output->Data))
+    l->Payload.Data = output->Data;
+    if (!ctx->Activate(l))
     {
       return false;
     }
@@ -36,11 +55,12 @@ bool Operator::ForwardOuput(TensorPtr output, IActivationCtxPtr ctx)
     {
       l = Onsc[i];
       void *buffer = ctx->MemoryManager->Clone(output->Data, output->Size);
-      if (!buffer)
+      if (buffer == nullptr)
       {
         return false;
       }
-      if (!ctx->Activate(l, buffer))
+      l->Payload.Data = buffer;
+      if (!ctx->Activate(l))
       {
         return false; // activation failed.
       }

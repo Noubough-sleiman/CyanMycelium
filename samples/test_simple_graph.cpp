@@ -1,6 +1,5 @@
 #include "cm_graph_builder.hpp"
 #include "cm_engine.hpp"
-#include "cm_engine_mem.hpp"
 #include "nodes/unary/cm_unary.hpp"
 
 #include <cstdlib>
@@ -67,21 +66,26 @@ int main()
     GraphPtr graph = gb->Build();
 
     // compute
-    IMemoryManager *mm = new MemoryManagerBase();
-    InferenceSessionPtr session = new InferenceSession(graph, mm);
-    // get the input tensor
-    TensorPtr inputTensor = session->GetInput("input", false);
-    // fill with data with a random distribution
-    inputTensor->Data = GenerateTimeSeries(rows, cols, -100, 10);
-    int negativCounter = CountNegativeValue((float *)inputTensor->Data, inputTensor->Count);
+    MemoryManagerBase mm;
+
+    InferenceEngineOptions options;
+
+    InferenceEnginePtr engine = new InferenceEngine(options);
+    engine->Start();
+
+    InferenceSessionPtr session = engine->CreateSession(graph, &mm);
+    void *data = GenerateTimeSeries(rows, cols, -100, 10);
+    int negativCounter = CountNegativeValue((float *)data, rows * cols);
     printf("Input tensor has %d negative values.\r\n", negativCounter);
 
-    // start inference
-    session->RunAsync();
-    // wait for completion
-    session->Join();
-    // get the output tensor
-    TensorPtr outputTensor = session->GetOutput("output");
-    negativCounter = CountNegativeValue((float *)outputTensor->Data, outputTensor->Count);
-    printf("Output tensor has %d negative values.\r\n", negativCounter);
+    KeyValueCollection<void *> inputs(1);
+    inputs.Set("input", data);
+
+    KeyValueCollection<void *> outputs(1);
+
+    // run inference
+    session->RunAsync(&inputs, &outputs);
+
+    // clean the session and stop the engine.
+    engine->Stop();
 }

@@ -1,5 +1,5 @@
-#ifndef __CYAN_MISCELIUM_GRAPH__
-#define __CYAN_MISCELIUM_GRAPH__
+#ifndef _CM_GRAPH__
+#define _CM_GRAPH__
 
 #include "cm.h"
 #include "concurrent/cm_concurrent.hpp"
@@ -7,7 +7,6 @@
 #include "memory/cm_memory_manager.hpp"
 #include "nodes/cm_nodes_commons.hpp"
 #include "collections/cm_collections.hpp"
-#include "cm_engine_mem.hpp"
 
 namespace CyanMycelium
 {
@@ -16,6 +15,8 @@ namespace CyanMycelium
     class Link;
     class UnaryOperator;
     class BinaryOperator;
+    class LinkCollection;
+    class NodeCollection;
 
     typedef void (*UnaryFunctionPtr)(Tensor *, Tensor *, UnaryOperator *);
     typedef void (*BinaryFunctionPtr)(Tensor *, Tensor *, Tensor *, BinaryOperator *);
@@ -26,8 +27,10 @@ namespace CyanMycelium
     public:
         IMemoryManagerPtr MemoryManager;
 
+        virtual void OnBegin(KeyValueCollection<void *> *) = 0;
         virtual bool Activate(Node *) = 0;
-        virtual bool Activate(Link *, void * = nullptr) = 0;
+        virtual bool Activate(Link *) = 0;
+        virtual void OnEnd(KeyValueCollection<void *> *) = 0;
 
     protected:
         IActivationCtx(IMemoryManagerPtr mm)
@@ -36,6 +39,21 @@ namespace CyanMycelium
         }
     };
     typedef IActivationCtx *IActivationCtxPtr;
+
+    enum ActivationEventType
+    {
+        CM_ACTIVATION_BEGIN,
+        CM_ACTIVATION_LINK,
+        CM_ACTIVATION_NODE,
+        CM_ACTIVATION_END
+    };
+
+    struct ActivationEvent
+    {
+        ActivationEventType Type;
+        IActivationCtx *Context;
+        void *Content;
+    };
 
     /// @brief
     class GraphItem
@@ -56,10 +74,11 @@ namespace CyanMycelium
         Node *Oini;
         Node *Ofin;
         Tensor Payload;
-        virtual bool Activate(IActivationCtxPtr ctx, void * = nullptr);
+        virtual bool Activate(IActivationCtxPtr ctx);
     };
 
     typedef Link *LinkPtr;
+
 
     /// @brief
     class LinkCollection : public Collection<LinkPtr>
@@ -68,6 +87,8 @@ namespace CyanMycelium
         LinkCollection(unsigned int initialCapacity = 2) : Collection<LinkPtr>(initialCapacity)
         {
         }
+        void Oini(Collection<Node *> *target);
+        void Ofin(Collection<Node *> *);
     };
 
     /// @brief
@@ -79,10 +100,8 @@ namespace CyanMycelium
         }
         LinkCollection Opsc;
         LinkCollection Onsc;
-        MutexPtr GetLock()
-        {
-            return &_lock;
-        }
+        void Lock(int timeoutMillis = CM_INFINITE) { _lock.Take(timeoutMillis); }
+        void Unlock() { _lock.Give(); }
         virtual bool Activate(IActivationCtxPtr ctx) = 0;
 
     private:

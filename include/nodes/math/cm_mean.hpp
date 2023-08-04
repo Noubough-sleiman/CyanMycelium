@@ -1,5 +1,5 @@
-#ifndef __CYAN_MISCELIUM_NODE_RESHAPE__
-#define __CYAN_MISCELIUM_NODE_RESHAPE__
+#ifndef _CM_NODE_RESHAPE__
+#define _CM_NODE_RESHAPE__
 #include "cm_graph.hpp"
 
 namespace CyanMycelium

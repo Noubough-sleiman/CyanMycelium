@@ -1,15 +1,25 @@
-#ifndef __CYAN_MISCELIUM_TASK__
-#define	__CYAN_MISCELIUM_TASK__
+#ifndef _CM_TASK__
+#define _CM_TASK__
 
 #include "cm.h"
 
 namespace CyanMycelium
 {
-    /* Task entry function signature */
-    typedef unsigned long (*thread_start_routine_fn)(void*);    
+    class IRunnable
+    {
+    public:
+        virtual unsigned long Run(void *) = 0;
+    };
 
     class Thread
     {
+    private:
+        struct Params
+        {
+            void *Parameters;
+            IRunnable *Target;
+        };
+        cm_thread_t _handle;
 
     public:
         enum class Priority
@@ -19,15 +29,20 @@ namespace CyanMycelium
             HIGH = 3,
             HIGHEST = 4
         };
- 
-        Thread(thread_start_routine_fn fn, unsigned int stackSize, void* param, Priority p = Priority::LOW);
-        ~Thread();
+        static unsigned long StaticThreadStart(void *p)
+        {
+            Params *tmp = (Params *)p;
+            IRunnable *r = tmp->Target;
+            void *parameters = tmp->Parameters;
+            delete tmp;
+            return r->Run(parameters);
+        }
 
-    private:
-       cm_thread_t _handle;
+        Thread(IRunnable *target, int stackSize, void *param, Priority p = Priority::LOW);
+        ~Thread();
     };
 
-    typedef Thread * ThreadPtr;
+    typedef Thread *ThreadPtr;
 }
 
 #endif

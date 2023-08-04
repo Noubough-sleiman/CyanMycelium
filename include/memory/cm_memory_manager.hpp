@@ -1,5 +1,5 @@
-#ifndef __CYAN_MISCELIUM_MEMORY_MANAGER__
-#define __CYAN_MISCELIUM_MEMORY_MANAGER__
+#ifndef _CM_MEMORY_MANAGER__
+#define _CM_MEMORY_MANAGER__
 
 namespace CyanMycelium
 {
@@ -14,5 +14,14 @@ namespace CyanMycelium
     };
 
     typedef IMemoryManager *IMemoryManagerPtr;
+
+    class MemoryManagerBase : public IMemoryManager
+    {
+    public:
+        void *Clone(void *ptr, const size_t size, int heap_id = 0) override;
+        void *Malloc(const size_t size, int heap_id = 0) override;
+        void *Realloc(void *ptr, const size_t size, int heap_id = 0) override;
+        void Free(void *ptr, int heap_id = 0) override;
+    };
 }
 #endif

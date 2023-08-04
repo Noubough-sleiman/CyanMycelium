@@ -1,5 +1,5 @@
-#ifndef __CYAN_MISCELIUM_NODE_BINARY__
-#define __CYAN_MISCELIUM_NODE_BINARY__
+#ifndef _CM_NODE_BINARY__
+#define _CM_NODE_BINARY__
 #include "cm_graph.hpp"
 
 namespace CyanMycelium

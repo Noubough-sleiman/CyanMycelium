@@ -1,0 +1,148 @@
+#include "cm_engine.hpp"
+
+using namespace CyanMycelium;
+
+/// @brief Test if all the tensor data is set in the link collection. This function is used to check if a node is ready for activation.
+/// @param links the list to test against
+/// @return true if all the payloads are ready -ie : have data != nullptr
+bool __AreLinkReady(Collection<LinkPtr> &links);
+
+/// @brief Test if all the tensor data are set in the Key Value link collection.
+// This function is used to determine the readyness or completion of the inference.
+/// @param links the list to test against
+/// @return true if all the payloads are ready -ie : have data != nullptr
+bool __AreLinkReady(KeyValueCollection<LinkPtr> &links);
+
+TensorPtr InferenceSession ::GetInputInfos(const char *name)
+{
+  LinkPtr l = this->_model->inputs[name];
+  return l ? &l->Payload : nullptr;
+}
+
+TensorPtr InferenceSession ::GetOutputInfos(const char *name)
+{
+  LinkPtr l = this->_model->outputs[name];
+  return l ? &l->Payload : nullptr;
+}
+
+bool InferenceSession ::RunAsync(KeyValueCollection<void *> *inputs, KeyValueCollection<void *> *output)
+{
+  _output = output;
+  ActivationEvent e = {CM_ACTIVATION_BEGIN, this, inputs};
+  return _queue->Send(&e);
+}
+
+void InferenceSession ::OnBegin(KeyValueCollection<void *> *inputs)
+{
+  KeyValueCollection<LinkPtr> &links = this->_model->inputs;
+  auto li = links.GetIterator();
+  NodeCollection nodes(links.Count());
+
+  if (li.MoveNext())
+  {
+    // prepare input data
+    do
+    {
+      KeyValue<LinkPtr> *entry = li.Current();
+      void *data = (*inputs)[entry->Key];
+      LinkPtr l = entry->Value;
+      l->Payload.Data = data;
+
+      NodePtr o = l->Ofin;
+      if (o && !nodes.Contains(o))
+      {
+        nodes.Add(o);
+      }
+    } while (li.MoveNext());
+
+    // then activate the nodes.
+    int c = nodes.Count();
+    for (int i = 0; i != c; ++i)
+    {
+      Activate(nodes[i]);
+    }
+  }
+}
+
+void InferenceSession ::OnEnd(KeyValueCollection<void *> *outputs)
+{
+}
+
+bool InferenceSession ::Activate(LinkPtr l)
+{
+  NodePtr nextNode = l->Ofin;
+  if (nextNode)
+  {
+    // this is NOT a terminal link
+    if (nextNode->Opsc.Count() > 1)
+    {
+      // we need to synchronize and potentially activate the node
+      nextNode->Lock();
+      l->Activate(this);
+      if (__AreLinkReady(nextNode->Opsc))
+      {
+        this->Activate(nextNode);
+      }
+      nextNode->Unlock();
+
+      return true;
+    }
+
+    // we activate the node
+    l->Activate(this);
+    this->Activate(nextNode);
+    return true;
+  }
+
+  // this is a terminal link, so update the completion mutex accordingly
+  l->Activate(this);
+  KeyValueCollection<LinkPtr> &outputs = _model->outputs;
+  if (outputs.Count() > 1)
+  {
+    if (!__AreLinkReady(outputs))
+      return true;
+  }
+
+  auto iterator = outputs.GetIterator();
+  if (iterator.MoveNext())
+  {
+    do
+    {
+      auto entry = iterator.Current();
+      _output->Set(entry->Key, entry->Value->Payload.Data);
+    } while (iterator.MoveNext());
+  }
+
+  ActivationEvent e = {CM_ACTIVATION_END, this, _output};
+  return _queue->Send(&e);
+}
+
+bool InferenceSession ::Activate(NodePtr node)
+{
+  ActivationEvent e = {CM_ACTIVATION_NODE, this, node};
+  return _queue->Send(&e);
+}
+
+bool __AreLinkReady(Collection<LinkPtr> &links)
+{
+  int c = links.Count();
+  for (int i = 0; i != c; i++)
+  {
+    LinkPtr l = links[i];
+    if (l && l->Payload.Data == nullptr)
+      return false;
+  }
+  return true;
+}
+
+bool __AreLinkReady(KeyValueCollection<LinkPtr> &links)
+{
+  int c = links.Count();
+  for (int i = 0; i != c; i++)
+  {
+    LinkPtr l = links[i].Value;
+    if (l && l->Payload.Data == nullptr)
+      return false;
+  }
+  return true;
+}

@@ -2,150 +2,87 @@
 
 using namespace CyanMycelium;
 
-/// @brief Test if all the tensor data is set in the link collection. This function is used to check if a node is ready for activation.
-/// @param links the list to test against
-/// @return true if all the payloads are ready -ie : have data != nullptr
-bool __AreLinkReady(Collection<LinkPtr> *links);
-
-/// @brief Test if all the tensor data are set in the Key Value link collection.
-// This function is used to determine the readyness or completion of the inference.
-/// @param links the list to test against
-/// @return true if all the payloads are ready -ie : have data != nullptr
-bool __AreLinkReady(KeyValueCollection<LinkPtr> *links);
-
-TensorPtr InferenceSession ::GetInput(const char *name, boolean autoAllocateBuffer)
+InferenceSessionPtr InferenceEngine ::CreateSession(GraphPtr model, IMemoryManagerPtr memoryManager)
 {
-  LinkPtr l = this->_model->inputs[name];
-  if (l)
-  {
-    if (autoAllocateBuffer && l->Payload.Data == nullptr)
-    {
-      l->Payload.Data = this->MemoryManager->Malloc(l->Payload.Size);
-    }
-    return &l->Payload;
-  }
-  return nullptr;
+  return new InferenceSession(model, &_queue, memoryManager);
 }
 
-void InferenceSession ::RunAsync()
+void InferenceEngine ::Start()
 {
-  // verifying that every inputs links are ready
-  KeyValueCollection<LinkPtr> *inputs = &this->_model->inputs;
-  if (__AreLinkReady(inputs))
+  // we create the thread
+  _lock.Take();
+  if (!_started)
   {
-    _completionHandle.Take();
-
-    int c = inputs->Count();
-    for (int i = 0; i != c; i++)
+    _started = true;
+    _threads = new ThreadPtr[_options.ThreadCount];
+    IRunnable *runnable = _options.Runtime ? _options.Runtime : this;
+    for (int i = 0; i < _options.ThreadCount; i++)
     {
-      LinkPtr l = (*inputs)[i].Value;
-      this->Activate(l->Ofin);
+      _threads[i] = new Thread(runnable, _options.StackSize, this, _options.Priority);
     }
   }
+  _lock.Give();
 }
 
-int InferenceSession ::Join(unsigned int timeoutmillis)
+void InferenceEngine ::Stop()
 {
-  _completionHandle.Take(timeoutmillis);
-  _completionHandle.Give();
-  return 0;
+  _started = false;
 }
 
-TensorPtr InferenceSession ::GetOutput(const char *name)
+bool InferenceEngine ::IsStarted()
 {
-  LinkPtr l = this->_model->outputs[name];
-  if (l)
+  _lock.Take();
+  bool tmp = _started;
+  _lock.Give();
+  return tmp;
+}
+
+unsigned long InferenceEngine ::Run(void *)
+{
+  if (IsStarted())
   {
-    return &l->Payload;
-  }
-  return nullptr;
-}
-
-InferenceSessionPtr InferenceSession ::Reset()
-{
-  this->State = SESSION_IDLE;
-  return this;
-}
-
-bool InferenceSession ::Activate(LinkPtr l, void *data)
-{
-  if (!l)
-  {
-    return false;
-  }
-
-  NodePtr nextNode = l->Ofin;
-  if (nextNode)
-  {
-    // this is NOT a terminal link
-    if (nextNode->Opsc.Count() > 1)
+    ActivationEvent e;
+    do
     {
-      // we need to synchronize and potentially activate the node
-      MutexPtr lock = nextNode->GetLock();
-      if (lock)
-        lock->Take();
-      l->Activate(this, data);
-      if (__AreLinkReady(&nextNode->Opsc))
+      if (_queue.Receive(&e, _options.WaitTimeout))
       {
-        this->Activate(nextNode);
+        Consume(e);
       }
-      if (lock)
-        lock->Give();
-      return true;
-    }
-
-    // we activate the node
-    l->Activate(this, data);
-    this->Activate(nextNode);
-    return true;
+    } while (IsStarted());
   }
-
-  // this is a terminal link, so update the completion mutex accordingly
-  l->Activate(this, data);
-  if (this->_model->outputs.Count() > 1)
-  {
-    if (!__AreLinkReady(&this->_model->outputs))
-      return true;
-  }
-  _completionHandle.Give();
-  return true;
+  return 0l;
 }
 
-bool InferenceSession ::Activate(NodePtr node)
+void InferenceEngine ::Consume(ActivationEvent &e)
 {
-  node->Activate(this);
-  int count = node->Onsc.Count();
-  for (int i = 0; i != count; ++i)
+  IActivationCtx *context = e.Context;
+
+  switch (e.Type)
   {
-    LinkPtr l = node->Onsc[i];
-    if (!l || !this->Activate(node->Onsc[i]))
+  case CM_ACTIVATION_BEGIN:
+  {
+    context->OnBegin((KeyValueCollection<void *> *)e.Content);
+    break;
+  }
+  case CM_ACTIVATION_NODE:
+  {
+    NodePtr node = (NodePtr)e.Content;
+    node->Activate(context);
+    int count = node->Onsc.Count();
+    for (int i = 0; i != count; ++i)
     {
-      return false;
+      context->Activate(node->Onsc[i]);
     }
+    break;
   }
-  return true;
-}
-
-bool __AreLinkReady(Collection<LinkPtr> *links)
-{
-  int c = links->Count();
-  for (int i = 0; i != c; i++)
+  case CM_ACTIVATION_LINK:
   {
-    LinkPtr l = (*links)[i];
-    if (l && l->Payload.Data == nullptr)
-      return false;
+    break;
   }
-  return true;
-}
-
-bool __AreLinkReady(KeyValueCollection<LinkPtr> *links)
-{
-  int c = links->Count();
-  for (int i = 0; i != c; i++)
+  case CM_ACTIVATION_END:
   {
-    LinkPtr l = (*links)[i].Value;
-    if (l && l->Payload.Data == nullptr)
-      return false;
+    context->OnEnd((KeyValueCollection<void *> *)e.Content);
+    break;
   }
-  return true;
+  }
 }
