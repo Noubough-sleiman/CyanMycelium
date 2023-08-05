@@ -25,15 +25,9 @@ TensorPtr InferenceSession ::GetOutputInfos(const char *name)
   return l ? &l->Payload : nullptr;
 }
 
-bool InferenceSession ::RunAsync(KeyValueCollection<void *> *inputs, KeyValueCollection<void *> *output)
+bool InferenceSession ::RunAsync(KeyValueCollection<void *> *inputs, KeyValueCollection<void *> *outputs)
 {
-  _output = output;
-  ActivationEvent e = {CM_ACTIVATION_BEGIN, this, inputs};
-  return _queue->Send(&e);
-}
-
-void InferenceSession ::OnBegin(KeyValueCollection<void *> *inputs)
-{
+  _target = outputs;
   KeyValueCollection<LinkPtr> &links = this->_model->inputs;
   auto li = links.GetIterator();
   NodeCollection nodes(links.Count());
@@ -62,10 +56,14 @@ void InferenceSession ::OnBegin(KeyValueCollection<void *> *inputs)
       Activate(nodes[i]);
     }
   }
+  return true;
 }
 
-void InferenceSession ::OnEnd(KeyValueCollection<void *> *outputs)
+DataCollections *InferenceSession ::AwaitOutputs(int timeout)
 {
+  DataCollections *ptr;
+  _wait.Receive(&ptr);
+  return ptr;
 }
 
 bool InferenceSession ::Activate(LinkPtr l)
@@ -97,24 +95,14 @@ bool InferenceSession ::Activate(LinkPtr l)
   // this is a terminal link, so update the completion mutex accordingly
   l->Activate(this);
   KeyValueCollection<LinkPtr> &outputs = _model->outputs;
-  if (outputs.Count() > 1)
+  if (outputs.Count() > 1 && !__AreLinkReady(outputs))
   {
-    if (!__AreLinkReady(outputs))
-      return true;
+    return true;
   }
 
-  auto iterator = outputs.GetIterator();
-  if (iterator.MoveNext())
-  {
-    do
-    {
-      auto entry = iterator.Current();
-      _output->Set(entry->Key, entry->Value->Payload.Data);
-    } while (iterator.MoveNext());
-  }
+  KEY_VALUE_COLLECTION_COPY(outputs, _target, entry->Value->Payload.Data);
 
-  ActivationEvent e = {CM_ACTIVATION_END, this, _output};
-  return _queue->Send(&e);
+  return _wait.Send(&_target);
 }
 
 bool InferenceSession ::Activate(NodePtr node)

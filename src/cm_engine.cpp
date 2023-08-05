@@ -59,11 +59,6 @@ void InferenceEngine ::Consume(ActivationEvent &e)
 
   switch (e.Type)
   {
-  case CM_ACTIVATION_BEGIN:
-  {
-    context->OnBegin((KeyValueCollection<void *> *)e.Content);
-    break;
-  }
   case CM_ACTIVATION_NODE:
   {
     NodePtr node = (NodePtr)e.Content;
@@ -77,11 +72,6 @@ void InferenceEngine ::Consume(ActivationEvent &e)
   }
   case CM_ACTIVATION_LINK:
   {
-    break;
-  }
-  case CM_ACTIVATION_END:
-  {
-    context->OnEnd((KeyValueCollection<void *> *)e.Content);
     break;
   }
   }

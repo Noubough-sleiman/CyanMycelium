@@ -76,15 +76,22 @@ int main()
     InferenceSessionPtr session = engine->CreateSession(graph, &mm);
     void *data = GenerateTimeSeries(rows, cols, -100, 10);
     int negativCounter = CountNegativeValue((float *)data, rows * cols);
-    printf("Input tensor has %d negative values.\r\n", negativCounter);
+    printf("Before activation, Input tensor has %d negative values.\r\n", negativCounter);
 
-    KeyValueCollection<void *> inputs(1);
+    DataCollections inputs(1);
     inputs.Set("input", data);
-
-    KeyValueCollection<void *> outputs(1);
+    DataCollections outputs(1);
 
     // run inference
     session->RunAsync(&inputs, &outputs);
+
+    // wait for the result to be available
+    DataCollections *result = session->AwaitOutputs();
+
+    // grab result
+    data = result->Get("output"); // should be also accessed by index (faster) (*result)[0]->Value
+    negativCounter = CountNegativeValue((float *)data, rows * cols);
+    printf("After activation, Output tensor has %d negative values.\r\n", negativCounter);
 
     // clean the session and stop the engine.
     engine->Stop();

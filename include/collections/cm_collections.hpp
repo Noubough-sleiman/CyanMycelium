@@ -188,7 +188,8 @@ namespace CyanMycelium
       }
     };
 
-    public : KeyValueCollection(unsigned int initialCapacity = 2) : Collection<KeyValue<T>>(initialCapacity)
+  public:
+    KeyValueCollection(unsigned int initialCapacity = 2) : Collection<KeyValue<T>>(initialCapacity)
     {
     }
 
@@ -246,5 +247,15 @@ namespace CyanMycelium
     }
   };
 
+#define KEY_VALUE_COLLECTION_COPY(src, target, f) \
+  auto iterator = (src).GetIterator();            \
+  if (iterator.MoveNext())                        \
+  {                                               \
+    do                                            \
+    {                                             \
+      auto entry = iterator.Current();            \
+      (target)->Set(entry->Key, f);               \
+    } while (iterator.MoveNext());                \
+  }
 }
 #endif

@@ -27,10 +27,8 @@ namespace CyanMycelium
     public:
         IMemoryManagerPtr MemoryManager;
 
-        virtual void OnBegin(KeyValueCollection<void *> *) = 0;
         virtual bool Activate(Node *) = 0;
         virtual bool Activate(Link *) = 0;
-        virtual void OnEnd(KeyValueCollection<void *> *) = 0;
 
     protected:
         IActivationCtx(IMemoryManagerPtr mm)
@@ -42,10 +40,8 @@ namespace CyanMycelium
 
     enum ActivationEventType
     {
-        CM_ACTIVATION_BEGIN,
         CM_ACTIVATION_LINK,
         CM_ACTIVATION_NODE,
-        CM_ACTIVATION_END
     };
 
     struct ActivationEvent
@@ -78,7 +74,6 @@ namespace CyanMycelium
     };
 
     typedef Link *LinkPtr;
-
 
     /// @brief
     class LinkCollection : public Collection<LinkPtr>
