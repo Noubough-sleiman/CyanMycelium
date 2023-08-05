@@ -38,17 +38,27 @@ namespace CyanMycelium
         pb_tag tag;
     } pb_reader_status;
 
+    typedef uint_least8_t pb_byte_t;
+
+    typedef struct
+    {
+        bool (*callback)(pb_istream_t *stream, pb_byte_t *buf, size_t count);
+        size_t bytes_left;
+    } pb_istream_t;
+
     class PBReader
     {
     public:
-        PBReader()
+        PBReader(pb_istream_t *input)
         {
-            memset(&(this->status), 0, sizeof(pb_reader_status));
+            memset(&(_status), 0, sizeof(pb_reader_status));
+            _input = input;
         }
 
-        PBReader(pb_reader_status status)
+        PBReader(PBReader &other)
         {
-            this->status = status;
+            _status = other._status;
+            _input = other._input;
         }
         ~PBReader() {}
 
@@ -67,11 +77,12 @@ namespace CyanMycelium
 
         pb_token_type_t GetTokenType()
         {
-            return this->status.tokenType;
+            return _status.tokenType;
         }
 
     private:
-        pb_reader_status status;
+        pb_reader_status _status;
+        pb_istream_t *_input
     };
 
     typedef PBReader *PBReaderPtr;
