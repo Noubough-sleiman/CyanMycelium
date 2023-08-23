@@ -16,6 +16,18 @@ using namespace BlueSteelLadyBug;
 #define NODE_TYPE_FIELD_NUMBER 4
 #define NODE_ATT_FIELD_NUMBER 5
 
+#define READ_FUNC_0(n) n(subReader)
+#define READ_FUNC_1(n, p) n(p, subReader)
+
+#define READ_SUB_MESSAGE(r, f, a)                   \
+    PBReader *subReader = r->getSubMessageReader(); \
+    bool res = f;                                   \
+    delete subReader;                               \
+    if (!res)                                       \
+    {                                               \
+        a;                                          \
+    }
+
 OnnxGraphBuilder ::OnnxGraphBuilder()
 {
 }
@@ -39,13 +51,7 @@ GraphPtr OnnxGraphBuilder ::Build()
         // skip every fields from the model and focus on graph.
         if (_reader->getFieldNumber() == GRAPH_FIELD_NUMBER)
         {
-            PBReader *subReader = _reader->getSubMessageReader();
-            bool res = _readGraph(subReader);
-            delete subReader;
-            if (!res)
-            {
-                return nullptr;
-            }
+            READ_SUB_MESSAGE(_reader, READ_FUNC_0(_readGraph), return nullptr)
         }
         _reader->skip();
     }
@@ -65,25 +71,13 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
         {
         case (NODE_FIELD_NUMBER):
         {
-            PBReader *subReader = reader->getSubMessageReader();
-            bool res = _readNode(subReader);
-            delete subReader;
-            if (!res)
-            {
-                return false;
-            }
+            READ_SUB_MESSAGE(reader, READ_FUNC_0(_readNode), return false)
             continue;
         }
         case (INPUT_FIELD_NUMBER):
         case (OUTPUT_FIELD_NUMBER):
         {
-            PBReader *subReader = reader->getSubMessageReader();
-            bool res = _readValueInfos(fieldNumber, subReader);
-            delete subReader;
-            if (!res)
-            {
-                return false;
-            }
+            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readValueInfos, fieldNumber), return false)
             continue;
         }
         default:
@@ -99,13 +93,7 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
     {
         if (reader->getFieldNumber() == NODE_FIELD_NUMBER)
         {
-            PBReader *subReader = reader->getSubMessageReader();
-            bool res = _link(subReader);
-            delete subReader;
-            if (!res)
-            {
-                return false;
-            }
+            READ_SUB_MESSAGE(reader, READ_FUNC_0(_link), return false)
             continue;
         }
         reader->skip();
