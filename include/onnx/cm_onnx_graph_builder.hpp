@@ -19,7 +19,9 @@ namespace CyanMycelium
 
         bool _readGraph(BlueSteelLadyBug ::PBReader *);
         bool _readNode(BlueSteelLadyBug ::PBReader *);
-        bool _link(BlueSteelLadyBug ::PBReader *);
+        bool _linkNode(BlueSteelLadyBug ::PBReader *);
+        bool _linkInput(BlueSteelLadyBug ::PBReader *);
+        bool _linkOutput(BlueSteelLadyBug ::PBReader *);
         bool _readValueInfos(lb_uint32_t, BlueSteelLadyBug ::PBReader *);
         NodePtr _createNode(const char *typeName);
     };

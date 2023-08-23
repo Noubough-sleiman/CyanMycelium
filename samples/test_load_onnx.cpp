@@ -43,6 +43,7 @@ int main()
         GraphPtr g = builder.WithReader(reader).Build();
         if (g)
         {
+            delete g;
         }
         delete input;
         delete reader;

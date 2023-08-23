@@ -74,12 +74,6 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
             READ_SUB_MESSAGE(reader, READ_FUNC_0(_readNode), return false)
             continue;
         }
-        case (INPUT_FIELD_NUMBER):
-        case (OUTPUT_FIELD_NUMBER):
-        {
-            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readValueInfos, fieldNumber), return false)
-            continue;
-        }
         default:
         {
             reader->skip();
@@ -91,12 +85,29 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
     // link the graph
     while (reader->readTag())
     {
-        if (reader->getFieldNumber() == NODE_FIELD_NUMBER)
+        lb_uint32_t fieldNumber = reader->getFieldNumber();
+        switch (fieldNumber)
         {
-            READ_SUB_MESSAGE(reader, READ_FUNC_0(_link), return false)
+        case (NODE_FIELD_NUMBER):
+        {
+            READ_SUB_MESSAGE(reader, READ_FUNC_0(_linkNode), return false)
             continue;
         }
-        reader->skip();
+        case (INPUT_FIELD_NUMBER):
+        {
+            READ_SUB_MESSAGE(reader, READ_FUNC_0(_linkInput), return false)
+            continue;
+        }
+        case (OUTPUT_FIELD_NUMBER):
+        {
+            READ_SUB_MESSAGE(reader, READ_FUNC_0(_linkOutput), return false)
+            continue;
+        }
+        default:
+        {
+            reader->skip();
+        }
+        }
     }
     return true;
 }
@@ -187,7 +198,7 @@ bool OnnxGraphBuilder ::_readNode(PBReader *reader)
     return true;
 }
 
-bool OnnxGraphBuilder ::_link(PBReader *reader)
+bool OnnxGraphBuilder ::_linkNode(PBReader *reader)
 {
     while (reader->readTag())
     {
@@ -199,6 +210,36 @@ bool OnnxGraphBuilder ::_link(PBReader *reader)
         case (NODE_OUTPUT_FIELD_NUMBER):
         {
         }
+        default:
+        {
+            reader->skip();
+            break;
+        }
+        }
+    }
+    return true;
+}
+bool OnnxGraphBuilder ::_linkInput(PBReader *reader)
+{
+    while (reader->readTag())
+    {
+        switch (reader->getFieldNumber())
+        {
+        default:
+        {
+            reader->skip();
+            break;
+        }
+        }
+    }
+    return true;
+}
+bool OnnxGraphBuilder ::_linkOutput(PBReader *reader)
+{
+    while (reader->readTag())
+    {
+        switch (reader->getFieldNumber())
+        {
         default:
         {
             reader->skip();

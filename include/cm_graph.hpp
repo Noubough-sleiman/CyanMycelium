@@ -100,6 +100,8 @@ namespace CyanMycelium
         Node() : _lock()
         {
         }
+        virtual ~Node() {}
+
         LinkCollection Opsc;
         LinkCollection Onsc;
         void Lock(int timeoutMillis = CM_INFINITE) { _lock.Take(timeoutMillis); }
@@ -162,6 +164,7 @@ namespace CyanMycelium
     class Graph : public Node
     {
     public:
+        ~Graph() {}
         /// @brief NULL terminated list of nodes.
         NodeCollection Nodes;
         /// @brief NULL terminated list of links.
