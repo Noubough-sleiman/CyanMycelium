@@ -2,10 +2,10 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug simple graph sample.",
+      "name": "Debug load onnx graph sample.",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/bin/debug/samples/test_simple_graph.exe",
+      "program": "${workspaceFolder}/bin/debug/samples/test_load_onnx.exe",
       "args": [],
       "stopAtEntry": false,
       "cwd": "${fileDirname}",

@@ -5,6 +5,10 @@
 
 namespace CyanMycelium
 {
+#ifndef CM_DEFAULT_COLLECTION_CAPACITY
+#define CM_DEFAULT_COLLECTION_CAPACITY 2
+#endif
+
   template <typename T>
   class Collection
   {
@@ -73,10 +77,10 @@ namespace CyanMycelium
       Collection<T> *_src;
     };
 
-    Collection(unsigned int initialCapacity = 2)
+    Collection(unsigned int initialCapacity = CM_DEFAULT_COLLECTION_CAPACITY)
     {
       _items = nullptr;
-      SetCapacity(max(initialCapacity, 2));
+      SetCapacity(max(initialCapacity, CM_DEFAULT_COLLECTION_CAPACITY));
       _count = 0;
     };
 
@@ -90,26 +94,39 @@ namespace CyanMycelium
 
     int Count() { return _count; };
 
-    T operator[](int i) { return _items[i]; };
+    T &operator[](int i) { return _items[i]; };
 
-    void Add(T obj)
+    T &First() { return _items[0]; }
+
+    T &Last() { return _items[_count - 1]; }
+
+    Collection<T> &Add(T &obj)
     {
       EnsureEnoughRoomFor(1);
       if (_items)
       {
-        _items[_count++] = obj;
+        _items[_count++] = obj; // copy
       }
+      return *this;
     };
 
-    void Trim()
+    Collection<T> &Add()
+    {
+      EnsureEnoughRoomFor(1);
+      _count++;
+      return *this;
+    };
+
+    Collection<T> &Trim()
     {
       if (_count != _capacity)
       {
         SetCapacity(_count);
       }
+      return *this;
     };
 
-    bool Contains(T obj)
+    bool Contains(T &obj)
     {
       if (_count == 0)
       {
@@ -127,7 +144,6 @@ namespace CyanMycelium
 
     Iterator<T> GetIterator() { return Iterator<T>(this); };
 
-  protected:
     void EnsureEnoughRoomFor(int n)
     {
       int targetCount = _count + n;
@@ -149,17 +165,20 @@ namespace CyanMycelium
       _capacity = _items ? newCapacity : 0;
     };
 
+  protected:
     T *_items;
     int _count;
     int _capacity;
   };
 
-#define KEY_MAX_LENGTH 32
+#ifndef CM_KEY_MAX_LENGTH
+#define CM_KEY_MAX_LENGTH 32
+#endif
 
   template <typename T>
   struct KeyValue
   {
-    char Key[KEY_MAX_LENGTH];
+    char Key[CM_KEY_MAX_LENGTH];
     T Value;
   };
 
@@ -231,7 +250,7 @@ namespace CyanMycelium
         this->SetCapacity(c);
       }
       KeyValue<T> *entry = this->_items + this->_count;
-      strcpy_s(entry->Key, KEY_MAX_LENGTH, key);
+      strcpy_s(entry->Key, CM_KEY_MAX_LENGTH, key);
       entry->Value = value;
       this->_count++;
     }

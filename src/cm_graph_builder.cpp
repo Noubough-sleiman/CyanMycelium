@@ -2,33 +2,25 @@
 
 using namespace CyanMycelium;
 
-GraphBuilder ::GraphBuilder()
-{
-}
-
-GraphBuilder ::~GraphBuilder()
-{
-}
-
-GraphBuilderPtr GraphBuilder ::WithNode(const char *k, NodePtr v)
+GraphBuilder &GraphBuilder ::WithNode(const char *k, NodePtr v)
 {
   if (k && v)
   {
     _nodes.Set(k, v);
   }
-  return this;
+  return *this;
 }
 
-GraphBuilderPtr GraphBuilder ::WithLink(const char *k, LinkPtr v)
+GraphBuilder &GraphBuilder ::WithLink(const char *k, LinkPtr v)
 {
   if (k && v)
   {
     _links.Set(k, v);
   }
-  return this;
+  return *this;
 }
 
-GraphBuilderPtr GraphBuilder ::WithConnection(NodePtr ini, LinkPtr l, NodePtr fin)
+GraphBuilder &GraphBuilder ::WithConnection(NodePtr ini, LinkPtr l, NodePtr fin)
 {
   l->Oini = ini;
   l->Ofin = fin;
@@ -40,10 +32,10 @@ GraphBuilderPtr GraphBuilder ::WithConnection(NodePtr ini, LinkPtr l, NodePtr fi
   {
     fin->Opsc.Add(l);
   }
-  return this;
+  return *this;
 }
 
-GraphBuilderPtr GraphBuilder ::WithConnection(LinkPtr p, NodePtr o, LinkPtr n)
+GraphBuilder &GraphBuilder ::WithConnection(LinkPtr p, NodePtr o, LinkPtr n)
 {
   if (p && !o->Opsc.Contains(p))
   {
@@ -55,7 +47,7 @@ GraphBuilderPtr GraphBuilder ::WithConnection(LinkPtr p, NodePtr o, LinkPtr n)
     o->Onsc.Add(n);
     n->Oini = o;
   }
-  return this;
+  return *this;
 }
 
 NodePtr GraphBuilder ::GetNode(const char *k)
@@ -72,7 +64,7 @@ GraphPtr GraphBuilder ::Build()
 {
   GraphPtr g = new Graph();
 
-  Collection<KeyValue<NodePtr>>::Iterator i = _nodes.GetIterator();
+  KeyValueCollection<NodePtr>::Iterator<KeyValue<NodePtr>> i = _nodes.GetIterator();
   while (i.MoveNext())
   {
     KeyValue<NodePtr> *entry = i.Current();
@@ -82,7 +74,7 @@ GraphPtr GraphBuilder ::Build()
     }
   }
 
-  Collection<KeyValue<LinkPtr>>::Iterator j = _links.GetIterator();
+  KeyValueCollection<LinkPtr>::Iterator<KeyValue<LinkPtr>> j = _links.GetIterator();
   while (j.MoveNext())
   {
     KeyValue<LinkPtr> *entry = j.Current();

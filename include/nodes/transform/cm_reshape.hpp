@@ -13,7 +13,15 @@ namespace CyanMycelium
   public:
     int8_t AllowZero = ALLOW_ZERO_DEFAULT;
     Reshape() : Operator(){};
-    bool Activate() override;
+    bool TrySetAtt(const char *n, Att_value_t v)
+    {
+      if (strcmp(n, "AllowZero"))
+      {
+        AllowZero = (int8_t)v.i;
+        return true;
+      }
+      return false;
+    }
   };
 }
 #endif

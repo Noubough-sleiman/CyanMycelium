@@ -1,5 +1,5 @@
-#ifndef _CM_DEF__
-#define _CM_DEF__
+#ifndef _BLUESTEEL_LADYBUG_DECL__
+#define _BLUESTEEL_LADYBUG_DECL__
 
 #if !defined(_WIN32) && (defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__)))
 /* UNIX-style OS. ------------------------------------------- */
@@ -36,24 +36,9 @@
 
 #if defined(_WIN64)
 /* Microsoft Windows (64-bit) */
-#include "cm_win64.h"
+#include "lb_win64.h"
 #elif defined(_WIN32)
 /* Microsoft Windows (32-bit) */
 #endif
-
-#if defined(__BLUE_PANDA__)
-#endif
-
-#ifndef max
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
-// use this value ensure beeing able to read the names of onnx files
-// which are sometime too long. A policy should be set for this name length.
-#define CM_KEY_MAX_LENGTH 128
 
 #endif

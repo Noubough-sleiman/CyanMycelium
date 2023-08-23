@@ -86,9 +86,16 @@ namespace CyanMycelium
         void Ofin(Collection<Node *> *);
     };
 
+    union Att_value_t
+    {
+        cm_float_t f;
+        cm_int64_t i;
+    };
+
     /// @brief
     class Node : public GraphItem
     {
+    protected:
     public:
         Node() : _lock()
         {
@@ -98,6 +105,7 @@ namespace CyanMycelium
         void Lock(int timeoutMillis = CM_INFINITE) { _lock.Take(timeoutMillis); }
         void Unlock() { _lock.Give(); }
         virtual bool Activate(IActivationCtxPtr ctx) = 0;
+        virtual bool TrySetAtt(const char *n, Att_value_t value) { return true; }
 
     private:
         Mutex _lock;

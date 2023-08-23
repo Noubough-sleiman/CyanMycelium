@@ -11,6 +11,21 @@ extern "C"
 {
 #endif
 
+    typedef int cm_int32_t;
+    typedef int cm_sint32_t;
+    typedef long long cm_int64_t;
+    typedef unsigned int cm_uint32_t;
+    typedef unsigned short cm_uint16_t;
+    typedef unsigned long long cm_uint64_t;
+
+    typedef float cm_float_t;
+    typedef double cm_double_t;
+
+    typedef bool cm_bool_t;
+
+    typedef unsigned char cm_byte_t;
+    typedef unsigned char cm_fastbyte_t;
+
 #define CM_INFINITE 0xFFFFFFFF
 #define CM_POLL 0x00000000
 

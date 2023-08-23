@@ -11,7 +11,6 @@ namespace CyanMycelium
 #define GREATER Greater
 #define LESS Less
 #define MAX Max
-#define MEAN Mean
 #define MIN Min
 #define MULT Mult
 #define OR Or
@@ -27,7 +26,6 @@ namespace CyanMycelium
   BINARY_OP_DECL(GREATER)
   BINARY_OP_DECL(LESS)
   BINARY_OP_DECL(MAX)
-  BINARY_OP_DECL(MEAN)
   BINARY_OP_DECL(MIN)
   BINARY_OP_DECL(MULT)
   BINARY_OP_DECL(OR)

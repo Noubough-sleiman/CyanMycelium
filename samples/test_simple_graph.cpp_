@@ -59,9 +59,9 @@ int main()
 
     // build the graph
     gb->WithNode("abs_0", abs_node)
-        ->WithLink("input", input)
-        ->WithLink("output", output)
-        ->WithConnection(input, abs_node, output);
+        .WithLink("input", input)
+        .WithLink("output", output)
+        .WithConnection(input, abs_node, output);
 
     GraphPtr graph = gb->Build();
 

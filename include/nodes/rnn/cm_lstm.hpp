@@ -4,7 +4,7 @@
 
 namespace CyanMycelium
 {
-  class LSTM : Operator
+  class LSTM : public Operator
   {
   public:
     LSTM() : Operator(){};
