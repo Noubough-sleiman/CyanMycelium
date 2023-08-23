@@ -22,7 +22,7 @@ NodePtr NodeRegistry::ForName(const char *n)
 NodeRegistry::NodeRegistry(int initialCapacity) : _types(initialCapacity)
 {
     // unary
-    __REGISTER__NODE(ABS);
+    __REGISTER__NODE(Abs);
     /*   __REGISTER__NODE(ACOS);
        __REGISTER__NODE(ACOSH);
        __REGISTER__NODE(ASIN);

@@ -40,7 +40,9 @@ GraphPtr OnnxGraphBuilder ::Build()
         if (_reader->getFieldNumber() == GRAPH_FIELD_NUMBER)
         {
             PBReader *subReader = _reader->getSubMessageReader();
-            if (!_readGraph(subReader))
+            bool res = _readGraph(subReader);
+            delete subReader;
+            if (!res)
             {
                 return nullptr;
             }
@@ -56,14 +58,17 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
     // 1 - read an mount the nodes
     // 2 - link the graph
     reader->save();
-    while (_reader->readTag())
+    while (reader->readTag())
     {
         lb_uint32_t fieldNumber = reader->getFieldNumber();
         switch (fieldNumber)
         {
         case (NODE_FIELD_NUMBER):
         {
-            if (!_readNode(reader))
+            PBReader *subReader = reader->getSubMessageReader();
+            bool res = _readNode(subReader);
+            delete subReader;
+            if (!res)
             {
                 return false;
             }
@@ -72,7 +77,10 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
         case (INPUT_FIELD_NUMBER):
         case (OUTPUT_FIELD_NUMBER):
         {
-            if (!_readValueInfos(fieldNumber, reader))
+            PBReader *subReader = reader->getSubMessageReader();
+            bool res = _readValueInfos(fieldNumber, subReader);
+            delete subReader;
+            if (!res)
             {
                 return false;
             }
@@ -87,11 +95,14 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
     reader->restore();
 
     // link the graph
-    while (_reader->readTag())
+    while (reader->readTag())
     {
-        if (_reader->getFieldNumber() == NODE_FIELD_NUMBER)
+        if (reader->getFieldNumber() == NODE_FIELD_NUMBER)
         {
-            if (!_link(reader))
+            PBReader *subReader = reader->getSubMessageReader();
+            bool res = _link(subReader);
+            delete subReader;
+            if (!res)
             {
                 return false;
             }
@@ -109,9 +120,9 @@ bool OnnxGraphBuilder ::_readNode(PBReader *reader)
 
     // we need to conduct a first pass read of the node to find the TYPE, which unfortunately is often at the end of the record.
     reader->save();
-    while (_reader->readTag())
+    while (reader->readTag())
     {
-        if (_reader->getFieldNumber() == NODE_TYPE_FIELD_NUMBER)
+        if (reader->getFieldNumber() == NODE_TYPE_FIELD_NUMBER)
         {
             reader->readValue_s(entry.Key, CM_KEY_MAX_LENGTH);
             break;
@@ -129,7 +140,7 @@ bool OnnxGraphBuilder ::_readNode(PBReader *reader)
 
     // parse name & specifics attributes
     entry.Value = n;
-    while (_reader->readTag())
+    while (reader->readTag())
     {
         switch (reader->getFieldNumber())
         {
@@ -142,34 +153,35 @@ bool OnnxGraphBuilder ::_readNode(PBReader *reader)
         {
             char name[CM_KEY_MAX_LENGTH];
             Att_value_t value;
-            while (_reader->readTag())
+            PBReader *subReader = reader->getSubMessageReader();
+            while (subReader->readTag())
             {
-                lb_uint32_t fieldNumber = reader->getFieldNumber();
+                lb_uint32_t fieldNumber = subReader->getFieldNumber();
                 switch (fieldNumber)
                 {
                 case (1):
                 {
-                    reader->readValue_s(name, CM_KEY_MAX_LENGTH);
+                    subReader->readValue_s(name, CM_KEY_MAX_LENGTH);
                     break;
                 }
                 case (2):
                 {
-                    reader->readValue(&value.f);
+                    subReader->readValue(&value.f);
                     break;
                 }
                 case (3):
                 {
-                    reader->readValue(&value.i);
+                    subReader->readValue(&value.i);
                     break;
                 }
                 default:
                 {
-                    reader->skip();
+                    subReader->skip();
                     break;
                 }
                 }
             }
-
+            delete subReader;
             // reach this point we can set the attribute.
             if (!n->TrySetAtt(name, value))
             {
@@ -189,7 +201,7 @@ bool OnnxGraphBuilder ::_readNode(PBReader *reader)
 
 bool OnnxGraphBuilder ::_link(PBReader *reader)
 {
-    while (_reader->readTag())
+    while (reader->readTag())
     {
         switch (reader->getFieldNumber())
         {
@@ -211,7 +223,7 @@ bool OnnxGraphBuilder ::_link(PBReader *reader)
 
 bool OnnxGraphBuilder ::_readValueInfos(lb_uint32_t field, BlueSteelLadyBug ::PBReader *reader)
 {
-    while (_reader->readTag())
+    while (reader->readTag())
     {
         switch (reader->getFieldNumber())
         {
