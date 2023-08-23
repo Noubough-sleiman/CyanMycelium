@@ -82,15 +82,21 @@ bool PBReader::readTag()
 
 void PBReader::save()
 {
-    if (_input->canSeek())
+    if (_input->canSeek() && _activSnapshot < (LB_MAX_READER_SNAPSHOT_DEPTH - 1))
     {
+        _activSnapshot++;
+        _snapshots[_activSnapshot].position = getPosition();
+        _snapshots[_activSnapshot].status = _status;
     }
 }
 
 void PBReader::restore()
 {
-    if (_input->canSeek())
+    if (_input->canSeek() && _activSnapshot >= 0)
     {
+        _status = _snapshots[_activSnapshot].status;
+        _input->seek(_snapshots[_activSnapshot].position, BEGIN);
+        _activSnapshot--;
     }
 }
 

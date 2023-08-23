@@ -6,6 +6,10 @@
 
 namespace BlueSteelLadyBug
 {
+#ifndef LB_MAX_READER_SNAPSHOT_DEPTH
+#define LB_MAX_READER_SNAPSHOT_DEPTH 8
+#endif
+
     enum WireType : lb_byte_t
     {
         PB_VARINT = 0,
@@ -23,6 +27,12 @@ namespace BlueSteelLadyBug
         bool lengthReaded;
     };
 
+    struct ReaderSnapshot
+    {
+        size_t position;
+        ReaderStatus status;
+    };
+
     class PBReader
     {
     public:
@@ -34,6 +44,7 @@ namespace BlueSteelLadyBug
             _status.depth = 0;
             _status.length = 0;
             _status.lengthReaded = false;
+            _activSnapshot = -1;
         }
 
         PBReader(IInputStream *input) : PBReader()
@@ -91,6 +102,8 @@ namespace BlueSteelLadyBug
     protected:
         ReaderStatus _status;
         IInputStream *_input;
+        ReaderSnapshot _snapshots[LB_MAX_READER_SNAPSHOT_DEPTH];
+        int _activSnapshot;
 
         bool _readVarint(lb_uint64_t *dest);
         bool _readSVarint(lb_int64_t *dest);
