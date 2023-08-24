@@ -90,12 +90,12 @@ namespace CyanMycelium
     {
         cm_float_t f;
         cm_int64_t i;
+        TensorPtr t;
     };
 
     /// @brief
     class Node : public GraphItem
     {
-    protected:
     public:
         Node() : _lock()
         {
@@ -107,7 +107,9 @@ namespace CyanMycelium
         void Lock(int timeoutMillis = CM_INFINITE) { _lock.Take(timeoutMillis); }
         void Unlock() { _lock.Give(); }
         virtual bool Activate(IActivationCtxPtr ctx) = 0;
+        // you may use attribute binding logic by name or index.
         virtual bool TrySetAtt(const char *n, Att_value_t value) { return true; }
+        virtual bool TrySetAtt(int index, Att_value_t value) { return true; }
 
     private:
         Mutex _lock;

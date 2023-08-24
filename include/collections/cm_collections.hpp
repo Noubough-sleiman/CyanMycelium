@@ -43,19 +43,7 @@ namespace CyanMycelium
         _i = -1;
       };
 
-      void To(Collection<V *> *c)
-      {
-        Reset();
-        if (MoveNext())
-        {
-          do
-          {
-            c->Add(Current());
-          } while (MoveNext());
-        }
-      }
-
-      void ToSingle(Collection<V *> *c)
+      void To(Collection<V> &c)
       {
         Reset();
         if (MoveNext())
@@ -63,11 +51,27 @@ namespace CyanMycelium
           do
           {
             V *v = Current();
-            if (c->Contains(v))
+            if (v)
+            {
+              c.Add(*v);
+            }
+          } while (MoveNext());
+        }
+      }
+
+      void ToSingle(Collection<V> &c)
+      {
+        Reset();
+        if (MoveNext())
+        {
+          do
+          {
+            V *v = Current();
+            if (c.Contains(*v))
             {
               continue;
             }
-            c->Add(v);
+            c.Add(*v);
           } while (MoveNext());
         }
       }
@@ -107,6 +111,18 @@ namespace CyanMycelium
       {
         _items[_count++] = obj; // copy
       }
+      return *this;
+    };
+
+    Collection<T> &Add(Collection<T> &other)
+    {
+      other.GetIterator().To(this);
+      return this;
+    };
+
+    Collection<T> &Add(Iterator<T> &i)
+    {
+      i.To(this);
       return *this;
     };
 
@@ -255,7 +271,7 @@ namespace CyanMycelium
       this->_count++;
     }
 
-    ValueIterator Value()
+    ValueIterator Values()
     {
       return ValueIterator(this);
     }
