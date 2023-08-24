@@ -9,6 +9,7 @@ using namespace BlueSteelLadyBug;
 #define NODE_FIELD_NUMBER 1
 #define INPUT_FIELD_NUMBER 11
 #define OUTPUT_FIELD_NUMBER 12
+#define VALUE_INFO_FIELD_NUMBER 13
 
 #define NODE_INPUT_FIELD_NUMBER 1
 #define NODE_OUTPUT_FIELD_NUMBER 2
@@ -61,7 +62,7 @@ GraphPtr OnnxGraphBuilder ::Build()
 bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
 {
     // we read the graph into 2 pass
-    // 1 - read an mount the nodes
+    // 1 - read an mount the nodes and inputs/outputs
     // 2 - link the graph
     reader->save();
     while (reader->readTag())
@@ -72,6 +73,13 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
         case (NODE_FIELD_NUMBER):
         {
             READ_SUB_MESSAGE(reader, READ_FUNC_0(_readNode), return false)
+            continue;
+        }
+        case (INPUT_FIELD_NUMBER):
+        case (OUTPUT_FIELD_NUMBER):
+        case (VALUE_INFO_FIELD_NUMBER):
+        {
+            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readValueInfos, fieldNumber), return false)
             continue;
         }
         default:
@@ -91,16 +99,6 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
         case (NODE_FIELD_NUMBER):
         {
             READ_SUB_MESSAGE(reader, READ_FUNC_0(_linkNode), return false)
-            continue;
-        }
-        case (INPUT_FIELD_NUMBER):
-        {
-            READ_SUB_MESSAGE(reader, READ_FUNC_0(_linkInput), return false)
-            continue;
-        }
-        case (OUTPUT_FIELD_NUMBER):
-        {
-            READ_SUB_MESSAGE(reader, READ_FUNC_0(_linkOutput), return false)
             continue;
         }
         default:
@@ -150,37 +148,44 @@ bool OnnxGraphBuilder ::_readNode(PBReader *reader)
         }
         case (NODE_ATT_FIELD_NUMBER):
         {
+            // NOTE : Avoid creating a sub reader by using position pattern
             char name[CM_KEY_MAX_LENGTH];
             Att_value_t value;
-            PBReader *subReader = reader->getSubMessageReader();
-            while (subReader->readTag())
+            lb_uint64_t size;
+            if (!reader->readLength(&size))
             {
-                lb_uint32_t fieldNumber = subReader->getFieldNumber();
+                return false;
+            }
+            lb_uint64_t end = reader->getPosition() + size;
+            do
+            {
+                reader->readTag();
+                lb_uint32_t fieldNumber = reader->getFieldNumber();
                 switch (fieldNumber)
                 {
                 case (1):
                 {
-                    subReader->readValue_s(name, CM_KEY_MAX_LENGTH);
+                    reader->readValue_s(name, CM_KEY_MAX_LENGTH);
                     break;
                 }
                 case (2):
                 {
-                    subReader->readValue(&value.f);
+                    reader->readValue(&value.f);
                     break;
                 }
                 case (3):
                 {
-                    subReader->readValue(&value.i);
+                    reader->readValue(&value.i);
                     break;
                 }
                 default:
                 {
-                    subReader->skip();
+                    reader->skip();
                     break;
                 }
                 }
-            }
-            delete subReader;
+            } while (reader->getPosition() < end);
+
             // reach this point we can set the attribute.
             if (!n->TrySetAtt(name, value))
             {
@@ -210,36 +215,6 @@ bool OnnxGraphBuilder ::_linkNode(PBReader *reader)
         case (NODE_OUTPUT_FIELD_NUMBER):
         {
         }
-        default:
-        {
-            reader->skip();
-            break;
-        }
-        }
-    }
-    return true;
-}
-bool OnnxGraphBuilder ::_linkInput(PBReader *reader)
-{
-    while (reader->readTag())
-    {
-        switch (reader->getFieldNumber())
-        {
-        default:
-        {
-            reader->skip();
-            break;
-        }
-        }
-    }
-    return true;
-}
-bool OnnxGraphBuilder ::_linkOutput(PBReader *reader)
-{
-    while (reader->readTag())
-    {
-        switch (reader->getFieldNumber())
-        {
         default:
         {
             reader->skip();
