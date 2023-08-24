@@ -321,7 +321,8 @@ NodePtr OnnxGraphBuilder ::_createNode(const char *typeName)
 bool OnnxGraphBuilder ::_readTensor(bool sparse, BlueSteelLadyBug ::PBReader *reader)
 {
     lb_int32_t type;
-    lb_int64_t dim[];
+    lb_int64_t dim[TENSOR_MAX_DIMENSION];
+    int count = 0;
     while (reader->readTag())
     {
         switch (reader->getFieldNumber())
