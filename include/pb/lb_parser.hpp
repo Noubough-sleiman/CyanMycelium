@@ -91,6 +91,9 @@ namespace BlueSteelLadyBug
         /// @brief Restore the status previously saved. To do so, the underlying stream MUST support Seek operation
         void restore();
 
+        /// @brief Clear the last save without restoring.
+        void unsave();
+
         lb_uint32_t getFieldNumber() { return _status.fieldNumber; }
         WireType getWireType() { return _status.wireType; }
         lb_byte_t getDepth() { return _status.depth; }

@@ -64,20 +64,38 @@ Graph *OnnxGraphBuilder ::Build(Graph *target)
             }
             _reader->skip();
         }
-        // copy the raw content
-        _nodes.GetIterator().To(target->Nodes);
-        _links.Values().To(target->Links);
+        // copy the graph content
+        target = target ? target : new Graph(_nodes.Count(), _links.Count());
+        // 1 - nodes
+        _nodes.GetIterator().To(&target->Nodes);
+
+        // 2 -> links
+        KeyValueCollection<Link *>::Iterator<KeyValue<Link *>> i = _links.GetIterator();
+        while (i.MoveNext())
+        {
+            KeyValue<Link *> *entry = i.Current();
+            target->Links.Add(entry->Value);
+            if (entry->Value->Oini == nullptr)
+            {
+                // this is an input
+                target->inputs.Set(entry->Key, entry->Value);
+                continue;
+            }
+            if (entry->Value->Ofin == nullptr)
+            {
+                // this is an output
+                target->outputs.Set(entry->Key, entry->Value);
+            }
+        }
     }
     return target;
 }
 
 bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
 {
-    // we read the graph into 2 pass
-    // 1 - read an mount the nodes and inputs/outputs/valueInfos
-    // 2 - link the graph - link the graph is to build links between the nodes and also
-    // to set node input attributes.
-    reader->save();
+    // cache beeing used along the parsing
+    char cache[CM_KEY_MAX_LENGTH];
+
     while (reader->readTag())
     {
         lb_uint32_t fieldNumber = reader->getFieldNumber();
@@ -85,17 +103,23 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
         {
         case (NODE_FIELD_NUMBER):
         {
-            READ_SUB_MESSAGE(reader, READ_FUNC_0(_readNode), return false)
+            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readNode, cache), return false)
             continue;
         }
-            // The inputs and outputs of the graph.
+        case (INITIALIZER_FIELD_NUMBER):
+        {
+            // reach this point, every link and nodes should be created
+            // the initializer will only initialize the values of Tensor
+            READ_SUB_MESSAGE(reader, READ_FUNC_0(_readInitializer), return false)
+        }
+        // The inputs and outputs of the graph.
         case (INPUT_FIELD_NUMBER):
         case (OUTPUT_FIELD_NUMBER):
             // Information for the values in the graph. The ValueInfoProto.name's
             // must be distinct. It is optional for a value to appear in value_info list.
         case (VALUE_INFO_FIELD_NUMBER):
         {
-            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readValueInfos, fieldNumber), return false)
+            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readValueInfos, cache), return false)
             continue;
         }
             // This field carries information to indicate the mapping among a tensor and its
@@ -109,45 +133,13 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
         }
         }
     }
-    reader->restore();
-
-    // link and initialize the graph
-    while (reader->readTag())
-    {
-        lb_uint32_t fieldNumber = reader->getFieldNumber();
-        switch (fieldNumber)
-        {
-        case (NODE_FIELD_NUMBER):
-        {
-            READ_SUB_MESSAGE(reader, READ_FUNC_0(_linkNode), return false)
-            continue;
-        }
-            // A list of named tensor values, used to specify constant inputs of the graph.
-            // Each initializer (both TensorProto as well SparseTensorProto) MUST have a name.
-            // The name MUST be unique across both initializer and sparse_initializer,
-            // but the name MAY also appear in the input list.
-        case (INITIALIZER_FIELD_NUMBER):
-            // Initializers (see above) stored in sparse format.
-        case (SPARSE_INITIALIZER_FIELD_NUMBER):
-        {
-            reader->skip();
-            continue;
-        }
-        default:
-        {
-            reader->skip();
-        }
-        }
-    }
     return true;
 }
 
-bool OnnxGraphBuilder ::_readNode(PBReader *reader)
+bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
 {
-    char cache[CM_KEY_MAX_LENGTH];
-
     // we need to conduct a first pass read of the node to find the TYPE,
-    // which unfortunately is never at the begining of the record.
+    // which unfortunately is never at the begining of the recordbecause of index value of 4 into the .proto definition
     reader->save();
     while (reader->readTag())
     {
@@ -220,27 +212,27 @@ bool OnnxGraphBuilder ::_readNode(PBReader *reader)
             }
             break;
         }
-        default:
-        {
-            reader->skip();
-            break;
-        }
-        }
-    }
-    return true;
-}
-
-bool OnnxGraphBuilder ::_linkNode(PBReader *reader)
-{
-    while (reader->readTag())
-    {
-        switch (reader->getFieldNumber())
-        {
         case (NODE_INPUT_FIELD_NUMBER):
         {
+            reader->readValue_s(cache, CM_KEY_MAX_LENGTH);
+            Link *l = _getOrCreateLink(cache);
+            if (l)
+            {
+                l->Ofin = n;
+                n->Opsc.Add(l);
+            }
+            break;
         }
         case (NODE_OUTPUT_FIELD_NUMBER):
         {
+            reader->readValue_s(cache, CM_KEY_MAX_LENGTH);
+            Link *l = _getOrCreateLink(cache);
+            if (l)
+            {
+                l->Oini = n;
+                n->Onsc.Add(l);
+            }
+            break;
         }
         default:
         {
@@ -253,9 +245,11 @@ bool OnnxGraphBuilder ::_linkNode(PBReader *reader)
 }
 
 // Defines information on value, including the name, the type, and the shape of the value.
-bool OnnxGraphBuilder ::_readValueInfos(lb_uint32_t field, BlueSteelLadyBug ::PBReader *reader)
+bool OnnxGraphBuilder ::_readValueInfos(char *cache, BlueSteelLadyBug ::PBReader *reader)
 {
-    char cache[CM_KEY_MAX_LENGTH];
+    // NOTE : we assume here that name is before type. The reason is the order of field declaration in the
+    // .proto file must be maintained in the serialized message.
+    Link *link = nullptr;
     while (reader->readTag())
     {
         switch (reader->getFieldNumber())
@@ -264,6 +258,7 @@ bool OnnxGraphBuilder ::_readValueInfos(lb_uint32_t field, BlueSteelLadyBug ::PB
         case VINFOS_NAME_FIELD_NUMBER:
         {
             reader->readValue_s(cache, CM_KEY_MAX_LENGTH);
+            link = _getOrCreateLink(cache);
             continue;
         }
         // This field MUST be present in this version of the IR for
@@ -286,12 +281,7 @@ bool OnnxGraphBuilder ::_readValueInfos(lb_uint32_t field, BlueSteelLadyBug ::PB
                 {
                 case TYPE_TENSOR_TYPE_FIELD_NUMBER:
                 {
-                    READ_SUB_MESSAGE(reader, READ_FUNC_1(_readTensor, false), return false)
-                    continue;
-                }
-                case TYPE_SPARSE_TENSOR_TYPE_FIELD_NUMBER:
-                {
-                    READ_SUB_MESSAGE(reader, READ_FUNC_1(_readTensor, true), return false)
+                    READ_SUB_MESSAGE(reader, READ_FUNC_1(_readTensorType, &link->Payload), return false)
                     continue;
                 }
                 default:
@@ -313,15 +303,16 @@ bool OnnxGraphBuilder ::_readValueInfos(lb_uint32_t field, BlueSteelLadyBug ::PB
     return true;
 }
 
-NodePtr OnnxGraphBuilder ::_createNode(const char *typeName)
+bool OnnxGraphBuilder ::_readInitializer(BlueSteelLadyBug ::PBReader *reader)
 {
-    return NodeRegistry ::ForName(typeName);
+    reader->skip();
+    return true;
 }
 
-bool OnnxGraphBuilder ::_readTensor(bool sparse, BlueSteelLadyBug ::PBReader *reader)
+bool OnnxGraphBuilder ::_readTensorType(Tensor *t, BlueSteelLadyBug ::PBReader *reader)
 {
     lb_int32_t type;
-    lb_int64_t dim[TENSOR_MAX_DIMENSION];
+    lb_int64_t shape[TENSOR_MAX_DIMENSION];
     int count = 0;
     while (reader->readTag())
     {
@@ -329,9 +320,20 @@ bool OnnxGraphBuilder ::_readTensor(bool sparse, BlueSteelLadyBug ::PBReader *re
         {
         case TENSOR_ELEM_TYPE_FIELD_NUMBER:
         {
+            reader->readValue(&type);
+            continue;
         }
         case TENSOR_SHAPE_FIELD_NUMBER:
         {
+            if (count <= TENSOR_MAX_DIMENSION)
+            {
+                reader->readValue(&type);
+            }
+            else
+            {
+                reader->skip();
+            }
+            continue;
         }
         default:
         {
@@ -340,5 +342,27 @@ bool OnnxGraphBuilder ::_readTensor(bool sparse, BlueSteelLadyBug ::PBReader *re
         }
         }
     }
+    t->Set(shape, count, (tensor_data_type_t)type);
     return true;
+}
+
+Node *OnnxGraphBuilder ::_createNode(const char *typeName)
+{
+    return NodeRegistry ::ForName(typeName);
+}
+
+Link *OnnxGraphBuilder ::_createLink()
+{
+    return new Link();
+}
+
+Link *OnnxGraphBuilder ::_getOrCreateLink(const char *name)
+{
+    Link *l = _links.Get(name);
+    if (!l)
+    {
+        l = _createLink();
+        _links.Set(name, l);
+    }
+    return l;
 }

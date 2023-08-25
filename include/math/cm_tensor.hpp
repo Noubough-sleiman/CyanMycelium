@@ -55,20 +55,20 @@ namespace CyanMycelium
         /// @brief build a tensor using shape and dimension
         /// @param shape the shape as an array of the size of each dimension
         /// @param dimension the number of axes or indices required to access the elements of the tensor.
-        Tensor(const uint32_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED)
+        Tensor(const int64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED)
         {
             Set(shape, dimension, type);
             Data = nullptr;
         }
 
-        Tensor *Set(const uint32_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED);
+        Tensor *Set(const int64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED);
 
-        size_t Size;                          // size in byte, must be equal to Count * sizeof(type)
-        size_t Count;                         // number of elements
-        void *Data;                           // byte array
-        tensor_data_type_t Type;              // type of underlying elements
-        uint8_t Dimension;                    // dimension of tensor
-        uint32_t Shape[TENSOR_MAX_DIMENSION]; // shape of tensor.
+        size_t Size;                         // size in byte, must be equal to Count * sizeof(type)
+        size_t Count;                        // number of elements
+        void *Data;                          // byte array
+        tensor_data_type_t Type;             // type of underlying elements
+        uint8_t Dimension;                   // dimension of tensor
+        int64_t Shape[TENSOR_MAX_DIMENSION]; // shape of tensor.
 
         bool ShapesAreEqual(Tensor *other);
 

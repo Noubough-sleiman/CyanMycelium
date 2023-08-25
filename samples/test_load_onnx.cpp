@@ -39,8 +39,7 @@ int main()
         PBReader *reader = new PBReader(input);
 
         OnnxGraphBuilder builder;
-
-        GraphPtr g = builder.WithReader(reader).Build();
+        Graph *g = builder.WithReader(reader).Build();
         if (g)
         {
             delete g;

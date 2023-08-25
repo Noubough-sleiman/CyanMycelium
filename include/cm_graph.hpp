@@ -62,7 +62,7 @@ namespace CyanMycelium
     {
     public:
         Link() : Link(nullptr, 1){};
-        Link(const uint32_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) : Payload(shape, dimension, type)
+        Link(const int64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) : Payload(shape, dimension, type)
         {
             Oini = nullptr;
             Ofin = nullptr;
@@ -158,6 +158,10 @@ namespace CyanMycelium
     };
     typedef BinaryOperator *BinaryOperatorPtr;
 
+#ifndef CM_DEFAULT_GRAPH_COLLECTION_CAPACITY
+#define CM_DEFAULT_GRAPH_COLLECTION_CAPACITY 16
+#endif
+
     /// @brief The Runtime support for the computational graph.
     /// As node we use  Object Positive Semi Conductor (Opsc) as input
     /// and Object Negativ Semi Conductor (Onsc) as output
@@ -166,6 +170,10 @@ namespace CyanMycelium
     class Graph : public Node
     {
     public:
+        Graph(int initialNodesCollectionSize = CM_DEFAULT_GRAPH_COLLECTION_CAPACITY, int initialLinkCollectionSize = CM_DEFAULT_GRAPH_COLLECTION_CAPACITY) : Nodes(max(initialNodesCollectionSize, CM_DEFAULT_COLLECTION_CAPACITY)),
+                                                                                                                                                             Links(max(initialLinkCollectionSize, CM_DEFAULT_COLLECTION_CAPACITY))
+        {
+        }
         ~Graph() {}
         /// @brief NULL terminated list of nodes.
         NodeCollection Nodes;

@@ -6,15 +6,12 @@
 
 namespace CyanMycelium
 {
-#ifndef CM_DEFAULT_GRAPH_BUILDER_COLLECTION_CAPACITY
-#define CM_DEFAULT_GRAPH_BUILDER_COLLECTION_CAPACITY 16
-#endif
 
     class OnnxGraphBuilder
     {
     public:
-        OnnxGraphBuilder(int initialNodesCollectionSize = CM_DEFAULT_GRAPH_BUILDER_COLLECTION_CAPACITY,
-                         int initialLinkCollectionSize = CM_DEFAULT_GRAPH_BUILDER_COLLECTION_CAPACITY);
+        OnnxGraphBuilder(int initialNodesCollectionSize = CM_DEFAULT_GRAPH_COLLECTION_CAPACITY,
+                         int initialLinkCollectionSize = CM_DEFAULT_GRAPH_COLLECTION_CAPACITY);
         ~OnnxGraphBuilder();
         OnnxGraphBuilder &WithReader(BlueSteelLadyBug ::PBReader *);
 
@@ -26,11 +23,13 @@ namespace CyanMycelium
         KeyValueCollection<Link *> _links;
 
         bool _readGraph(BlueSteelLadyBug ::PBReader *);
-        bool _readNode(BlueSteelLadyBug ::PBReader *);
-        bool _linkNode(BlueSteelLadyBug ::PBReader *);
-        bool _readValueInfos(lb_uint32_t, BlueSteelLadyBug ::PBReader *);
-        bool _readTensor(bool, BlueSteelLadyBug ::PBReader *);
-        NodePtr _createNode(const char *typeName);
+        bool _readNode(char *, BlueSteelLadyBug ::PBReader *);
+        bool _readValueInfos(char *, BlueSteelLadyBug ::PBReader *);
+        bool _readInitializer(BlueSteelLadyBug ::PBReader *);
+        bool _readTensorType(Tensor *, BlueSteelLadyBug ::PBReader *);
+        Node *_createNode(const char *);
+        Link *_createLink();
+        Link *_getOrCreateLink(const char *);
     };
 }
 #endif

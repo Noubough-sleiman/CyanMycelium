@@ -23,7 +23,7 @@ namespace CyanMycelium
         Reset();
       };
 
-      boolean MoveNext()
+      virtual boolean MoveNext()
       {
         int c = _src->Count();
         if (_i < c)
@@ -43,7 +43,7 @@ namespace CyanMycelium
         _i = -1;
       };
 
-      void To(Collection<V> &c)
+      void To(Collection<V> *c)
       {
         Reset();
         if (MoveNext())
@@ -53,13 +53,13 @@ namespace CyanMycelium
             V *v = Current();
             if (v)
             {
-              c.Add(*v);
+              c->Add(*v);
             }
           } while (MoveNext());
         }
       }
 
-      void ToSingle(Collection<V> &c)
+      void ToSingle(Collection<V> *c)
       {
         Reset();
         if (MoveNext())
@@ -67,11 +67,11 @@ namespace CyanMycelium
           do
           {
             V *v = Current();
-            if (c.Contains(*v))
+            if (c->Contains(*v))
             {
               continue;
             }
-            c.Add(*v);
+            c->Add(*v);
           } while (MoveNext());
         }
       }

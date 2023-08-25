@@ -28,7 +28,7 @@ namespace CyanMycelium
     return __TensorData_sizes__[(int)type];
   }
 
-  TensorPtr Tensor::Set(const uint32_t *shape, int dimension, tensor_data_type_t type)
+  TensorPtr Tensor::Set(const int64_t *shape, int dimension, tensor_data_type_t type)
   {
     uint8_t d = dimension < TENSOR_MAX_DIMENSION ? dimension : TENSOR_MAX_DIMENSION;
     size_t c = 1;

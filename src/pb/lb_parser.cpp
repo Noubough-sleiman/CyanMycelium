@@ -100,6 +100,14 @@ void PBReader::restore()
     }
 }
 
+void PBReader::unsave()
+{
+    if (_input->canSeek() && _activSnapshot >= 0)
+    {
+        _activSnapshot--;
+    }
+}
+
 PBReader *PBReader::getSubMessageReader()
 {
     lb_uint64_t l;
@@ -433,6 +441,7 @@ bool PBReader::readValue_s(char *v, int s)
     {
         return false;
     }
+    _invalidateLengthReaded();
     lb_byte_t *t = (lb_byte_t *)v;
     int max_size = min((int)size, s - 1);
     if (_input->read(t, (int)max_size) != max_size)
@@ -454,6 +463,7 @@ bool PBReader::readValue_s(lb_byte_t *v, int s)
     {
         return false;
     }
+    _invalidateLengthReaded();
     int max_size = min((int)size, s);
     if (_input->read(v, max_size) != max_size)
     {
