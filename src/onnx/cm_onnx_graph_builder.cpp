@@ -31,7 +31,7 @@ using namespace BlueSteelLadyBug;
 
 #define READ_SUB_MESSAGE(r, f, a)                   \
     PBReader *subReader = r->getSubMessageReader(); \
-    bool res = f;                                   \
+    bool res = this->f;                             \
     delete subReader;                               \
     if (!res)                                       \
     {                                               \
@@ -47,30 +47,30 @@ OnnxGraphBuilder ::~OnnxGraphBuilder() {}
 
 OnnxGraphBuilder &OnnxGraphBuilder ::WithReader(PBReader *reader)
 {
-    _reader = reader;
+    this->_reader = reader;
     return *this;
 }
 
 Graph *OnnxGraphBuilder ::Build(Graph *target)
 {
-    if (_reader)
+    if (this->_reader)
     {
-        while (_reader->readTag())
+        while (this->_reader->readTag())
         {
             // skip every fields from the model and focus on graph.
-            if (_reader->getFieldNumber() == GRAPH_FIELD_NUMBER)
+            if (this->_reader->getFieldNumber() == GRAPH_FIELD_NUMBER)
             {
-                READ_SUB_MESSAGE(_reader, READ_FUNC_0(_readGraph), return nullptr)
+                READ_SUB_MESSAGE(this->_reader, READ_FUNC_0(_readGraph), return nullptr)
             }
-            _reader->skip();
+            this->_reader->skip();
         }
         // copy the graph content
-        target = target ? target : new Graph(_nodes.Count(), _links.Count());
+        target = target ? target : new Graph(this->_nodes.Count(), _links.Count());
         // 1 - nodes
-        _nodes.GetIterator().To(&target->Nodes);
+        this->_nodes.GetIterator().To(&target->Nodes);
 
         // 2 -> links
-        KeyValueCollection<Link *>::Iterator<KeyValue<Link *>> i = _links.GetIterator();
+        KeyValueCollection<Link *>::Iterator<KeyValue<Link *>> i = this->_links.GetIterator();
         while (i.MoveNext())
         {
             KeyValue<Link *> *entry = i.Current();
@@ -159,7 +159,7 @@ bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
         return false;
     }
 
-    _nodes.Add(n);
+    this->_nodes.Add(n);
 
     // parse name & specifics attributes
     while (reader->readTag())
@@ -215,7 +215,7 @@ bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
         case (NODE_INPUT_FIELD_NUMBER):
         {
             reader->readValue_s(cache, CM_KEY_MAX_LENGTH);
-            Link *l = _getOrCreateLink(cache);
+            Link *l = this->_getOrCreateLink(cache);
             if (l)
             {
                 l->Ofin = n;
@@ -226,7 +226,7 @@ bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
         case (NODE_OUTPUT_FIELD_NUMBER):
         {
             reader->readValue_s(cache, CM_KEY_MAX_LENGTH);
-            Link *l = _getOrCreateLink(cache);
+            Link *l = this->_getOrCreateLink(cache);
             if (l)
             {
                 l->Oini = n;
@@ -258,7 +258,7 @@ bool OnnxGraphBuilder ::_readValueInfos(char *cache, BlueSteelLadyBug ::PBReader
         case VINFOS_NAME_FIELD_NUMBER:
         {
             reader->readValue_s(cache, CM_KEY_MAX_LENGTH);
-            link = _getOrCreateLink(cache);
+            link = this->_getOrCreateLink(cache);
             continue;
         }
         // This field MUST be present in this version of the IR for
@@ -401,11 +401,11 @@ Link *OnnxGraphBuilder ::_createLink()
 
 Link *OnnxGraphBuilder ::_getOrCreateLink(const char *name)
 {
-    Link *l = _links.Get(name);
+    Link *l = this->_links.Get(name);
     if (!l)
     {
-        l = _createLink();
-        _links.Set(name, l);
+        l = this->_createLink();
+        this->_links.Set(name, l);
     }
     return l;
 }
