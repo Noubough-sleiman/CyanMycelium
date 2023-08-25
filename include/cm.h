@@ -44,14 +44,6 @@
 #if defined(__BLUE_PANDA__)
 #endif
 
-#ifndef max
-#define max(a, b) (((a) > (b)) ? (a) : (b))
-#endif
-
-#ifndef min
-#define min(a, b) (((a) < (b)) ? (a) : (b))
-#endif
-
 // use this value ensure beeing able to read the names of onnx files
 // which are sometime too long. A policy should be set for this name length.
 #define CM_KEY_MAX_LENGTH 128

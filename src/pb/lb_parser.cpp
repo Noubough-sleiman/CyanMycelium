@@ -39,7 +39,7 @@ bool PBReader::_readPacked(T *v, WireType wt)
     }
 }
 
-bool PBReader::readLength(lb_uint64_t *v)
+bool PBReader::readLength(lb_uint64_t *v, bool validate)
 {
     switch (_status.wireType)
     {
@@ -56,7 +56,7 @@ bool PBReader::readLength(lb_uint64_t *v)
                 return false;
             }
             _status.length = *v;
-            _status.lengthReaded = true;
+            _status.lengthReaded = validate;
         }
         return true;
     }

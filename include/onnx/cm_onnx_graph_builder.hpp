@@ -27,6 +27,7 @@ namespace CyanMycelium
         bool _readValueInfos(char *, BlueSteelLadyBug ::PBReader *);
         bool _readInitializer(BlueSteelLadyBug ::PBReader *);
         bool _readTensorType(Tensor *, BlueSteelLadyBug ::PBReader *);
+        bool _readTensorShape(Tensor *, BlueSteelLadyBug ::PBReader *);
         Node *_createNode(const char *);
         Link *_createLink();
         Link *_getOrCreateLink(const char *);

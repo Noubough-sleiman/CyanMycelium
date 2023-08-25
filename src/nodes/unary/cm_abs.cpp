@@ -3,7 +3,7 @@
 
 namespace CyanMycelium
 {
-#define ABS_CODE(a) ((a < 0) ? -a : a)
+#define ABS_CODE(a) abs(a)
 
   UNARY_FUNC_TEMPLATE(ABS)
 

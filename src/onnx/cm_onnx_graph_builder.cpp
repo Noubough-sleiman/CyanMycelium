@@ -171,7 +171,7 @@ bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
             // NOTE : Avoid creating a sub reader by using position based parse pattern
             Att_value_t value;
             lb_uint64_t size;
-            if (!reader->readLength(&size))
+            if (!reader->readLength(&size, false))
             {
                 return false;
             }
@@ -267,7 +267,7 @@ bool OnnxGraphBuilder ::_readValueInfos(char *cache, BlueSteelLadyBug ::PBReader
         {
             // NOTE : Avoid creating a sub reader by using position based parse pattern
             lb_uint64_t length;
-            if (!reader->readLength(&length))
+            if (!reader->readLength(&length, false))
             {
                 return false;
             }
@@ -311,9 +311,7 @@ bool OnnxGraphBuilder ::_readInitializer(BlueSteelLadyBug ::PBReader *reader)
 
 bool OnnxGraphBuilder ::_readTensorType(Tensor *t, BlueSteelLadyBug ::PBReader *reader)
 {
-    lb_int32_t type;
-    lb_int64_t shape[TENSOR_MAX_DIMENSION];
-    int count = 0;
+    lb_uint32_t type;
     while (reader->readTag())
     {
         switch (reader->getFieldNumber())
@@ -321,18 +319,12 @@ bool OnnxGraphBuilder ::_readTensorType(Tensor *t, BlueSteelLadyBug ::PBReader *
         case TENSOR_ELEM_TYPE_FIELD_NUMBER:
         {
             reader->readValue(&type);
+            t->Type = (tensor_data_type_t)type;
             continue;
         }
         case TENSOR_SHAPE_FIELD_NUMBER:
         {
-            if (count <= TENSOR_MAX_DIMENSION)
-            {
-                reader->readValue(&type);
-            }
-            else
-            {
-                reader->skip();
-            }
+            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readTensorShape, t), return false)
             continue;
         }
         default:
@@ -342,7 +334,58 @@ bool OnnxGraphBuilder ::_readTensorType(Tensor *t, BlueSteelLadyBug ::PBReader *
         }
         }
     }
-    t->Set(shape, count, (tensor_data_type_t)type);
+    return true;
+}
+#define TENSOR_TYPE_DIM_FIELD_NUMBER 1
+#define DIM_VALUE_FIELD_NUMBER 1
+bool OnnxGraphBuilder ::_readTensorShape(Tensor *t, BlueSteelLadyBug ::PBReader *reader)
+{
+    lb_uint64_t shape[TENSOR_MAX_DIMENSION];
+    int count = 0;
+    while (reader->readTag())
+    {
+        switch (reader->getFieldNumber())
+        {
+        case TENSOR_TYPE_DIM_FIELD_NUMBER:
+        {
+            lb_uint64_t length;
+            if (!reader->readLength(&length, false))
+            {
+                return false;
+            }
+            lb_uint64_t end = reader->getPosition() + length;
+            do
+            {
+                reader->readTag();
+                switch (reader->getFieldNumber())
+                {
+                case DIM_VALUE_FIELD_NUMBER:
+                {
+                    if (count < TENSOR_MAX_DIMENSION)
+                    {
+                        reader->readValue(shape + count);
+                        count++;
+                    }
+                    continue;
+                }
+                default:
+                {
+                    reader->skip();
+                    break;
+                }
+                }
+            } while (reader->getPosition() < end);
+            continue;
+        }
+        default:
+        {
+            // to accept extensions
+            reader->skip();
+            break;
+        }
+        }
+    }
+    t->Set(shape, count, t->Type);
     return true;
 }
 

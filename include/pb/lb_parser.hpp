@@ -60,7 +60,7 @@ namespace BlueSteelLadyBug
         /// @return true if the token was read successfully; otherwise, false.
         bool readTag();
 
-        bool readLength(lb_uint64_t *);
+        bool readLength(lb_uint64_t *, bool = true);
 
         bool readValue(lb_int32_t *v) { return _readValue(v, _status.wireType); }
         bool readValue(lb_int64_t *v) { return _readValue(v, _status.wireType); }

@@ -62,7 +62,7 @@ namespace CyanMycelium
     {
     public:
         Link() : Link(nullptr, 1){};
-        Link(const int64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) : Payload(shape, dimension, type)
+        Link(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) : Payload(shape, dimension, type)
         {
             Oini = nullptr;
             Ofin = nullptr;
