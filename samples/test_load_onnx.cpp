@@ -47,7 +47,6 @@ int main()
                 Link *l = g->Links[i];
                 if (l)
                 {
-                    std::cout << l->Payload.Dimension;
                 }
             }
             delete g;

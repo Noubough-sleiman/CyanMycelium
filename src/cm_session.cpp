@@ -15,20 +15,20 @@ bool __AreLinkReady(KeyValueCollection<LinkPtr> &links);
 
 TensorPtr InferenceSession ::GetInputInfos(const char *name)
 {
-  LinkPtr l = this->_model->inputs[name];
+  LinkPtr l = this->_model->Inputs[name];
   return l ? &l->Payload : nullptr;
 }
 
 TensorPtr InferenceSession ::GetOutputInfos(const char *name)
 {
-  LinkPtr l = this->_model->outputs[name];
+  LinkPtr l = this->_model->Outputs[name];
   return l ? &l->Payload : nullptr;
 }
 
 bool InferenceSession ::RunAsync(KeyValueCollection<void *> *inputs, KeyValueCollection<void *> *outputs)
 {
   _target = outputs;
-  KeyValueCollection<LinkPtr> &links = this->_model->inputs;
+  KeyValueCollection<LinkPtr> &links = this->_model->Inputs;
   auto li = links.GetIterator();
   NodeCollection nodes(links.Count());
 
@@ -94,7 +94,7 @@ bool InferenceSession ::Activate(LinkPtr l)
 
   // this is a terminal link, so update the completion mutex accordingly
   l->Activate(this);
-  KeyValueCollection<LinkPtr> &outputs = _model->outputs;
+  KeyValueCollection<LinkPtr> &outputs = _model->Outputs;
   if (outputs.Count() > 1 && !__AreLinkReady(outputs))
   {
     return true;

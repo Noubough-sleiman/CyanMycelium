@@ -75,7 +75,7 @@ Graph *OnnxGraphBuilder ::Build(Graph *target)
             // skip every fields from the model and focus on graph.
             if (this->_reader->getFieldNumber() == GRAPH_FIELD_NUMBER)
             {
-                READ_SUB_MESSAGE(this->_reader, READ_FUNC_0(_readGraph), return nullptr)
+                READ_SUB_MESSAGE(this->_reader, READ_FUNC_0(_readGraph), goto _error)
             }
             this->_reader->skip();
         }
@@ -93,17 +93,23 @@ Graph *OnnxGraphBuilder ::Build(Graph *target)
             if (entry->Value->Oini == nullptr)
             {
                 // this is an input
-                target->inputs.Set(entry->Key, entry->Value);
+                target->Inputs.Set(entry->Key, entry->Value);
                 continue;
             }
             if (entry->Value->Ofin == nullptr)
             {
                 // this is an output
-                target->outputs.Set(entry->Key, entry->Value);
+                target->Outputs.Set(entry->Key, entry->Value);
             }
         }
+        target->Nodes.Trim();
+        target->Links.Trim();
+        target->Inputs.Trim();
+        target->Outputs.Trim();
     }
     return target;
+_error:
+    return nullptr;
 }
 
 bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
@@ -126,6 +132,7 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
             // reach this point, every link and nodes should be created
             // the initializer will only initialize the values of Tensor
             READ_SUB_MESSAGE(reader, READ_FUNC_1(_readInitializer, cache), goto _error)
+            continue;
         }
         // The inputs and outputs of the graph.
         case (INPUT_FIELD_NUMBER):
@@ -390,6 +397,7 @@ bool OnnxGraphBuilder ::_readInitializer(char *cache, BlueSteelLadyBug ::PBReade
             }
             // initialize..
             link->Payload = t;
+            break;
         }
         case TENSOR_RAW_DATA_FIELD_NUMBER:
         case TENSOR_DOUBLE_DATA_FIELD_NUMBER:
@@ -406,6 +414,7 @@ bool OnnxGraphBuilder ::_readInitializer(char *cache, BlueSteelLadyBug ::PBReade
 _error:
     if (t.Data)
     {
+        // clean memory.
         this->_free(t.Data);
     }
     return false;

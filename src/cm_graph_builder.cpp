@@ -83,11 +83,11 @@ GraphPtr GraphBuilder ::Build()
       g->Links.Add(entry->Value);
       if (entry->Value->Oini == nullptr)
       {
-        g->inputs.Set(entry->Key, entry->Value);
+        g->Inputs.Set(entry->Key, entry->Value);
       }
       if (entry->Value->Ofin == nullptr)
       {
-        g->outputs.Set(entry->Key, entry->Value);
+        g->Outputs.Set(entry->Key, entry->Value);
       }
     }
   }

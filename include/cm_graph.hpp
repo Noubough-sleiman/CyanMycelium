@@ -180,8 +180,8 @@ namespace CyanMycelium
         /// @brief NULL terminated list of links.
         LinkCollection Links;
 
-        KeyValueCollection<LinkPtr> inputs;
-        KeyValueCollection<LinkPtr> outputs;
+        KeyValueCollection<LinkPtr> Inputs;
+        KeyValueCollection<LinkPtr> Outputs;
 
         bool Activate(IActivationCtxPtr ctx) override;
     };

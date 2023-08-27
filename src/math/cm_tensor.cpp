@@ -30,18 +30,23 @@ namespace CyanMycelium
 
   TensorPtr Tensor::Set(const uint64_t *shape, int dimension, tensor_data_type_t type)
   {
-    uint8_t d = dimension < TENSOR_MAX_DIMENSION ? dimension : TENSOR_MAX_DIMENSION;
     size_t c = 1;
-    for (int i = 0; i != d; i++)
+    for (int i = 0; i != TENSOR_MAX_DIMENSION; i++)
     {
-      Shape[i] = shape ? shape[i] : 1;
-      c *= Shape[i];
+      if (i < dimension)
+      {
+        this->Shape[i] = shape ? shape[i] : 1;
+        c *= this->Shape[i];
+        continue;
+      }
+      this->Shape[i] = 0;
     }
-    Dimension = d;
-    Count = c;
-    Size = c * __GetSizeType(type);
-    Data = nullptr;
-    Type = type;
+
+    this->Dimension = dimension < TENSOR_MAX_DIMENSION ? dimension : TENSOR_MAX_DIMENSION;
+    this->Count = c;
+    this->Size = c * __GetSizeType(type);
+    this->Data = nullptr;
+    this->Type = type;
     return this;
   };
 
