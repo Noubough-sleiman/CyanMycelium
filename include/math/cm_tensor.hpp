@@ -4,7 +4,7 @@
 
 namespace CyanMycelium
 {
-#define TENSOR_MAX_DIMENSION 2
+#define TENSOR_MAX_DIMENSION 3
 
     typedef enum
     {

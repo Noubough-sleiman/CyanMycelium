@@ -29,7 +29,7 @@ char *ReadFileIntoMemory(const char *filename, size_t *fileSize)
 
 int main()
 {
-    const char *filename = "C:/Users/guill/Documents/sources/cyanmycelium/models/abs/abs.onnx";
+    const char *filename = "C:/Users/guill/Documents/sources/cyanmycelium/models/LSTM/lstm.onnx";
     size_t fileSize;
     char *fileContents = ReadFileIntoMemory(filename, &fileSize);
 

@@ -1,5 +1,5 @@
-#ifndef _CM_NODE_LSTM__
-#define _CM_NODE_LSTM__
+#ifndef _CM_NODE_LSTM_
+#define _CM_NODE_LSTM_
 #include "cm_graph.hpp"
 
 namespace CyanMycelium
@@ -8,8 +8,7 @@ namespace CyanMycelium
   {
   public:
     LSTM() : Operator(){};
-    bool Activate(IActivationCtxPtr ctx) override;
+    bool Activate(IActivationCtxPtr ctx) override { return true; }
   };
-
 }
 #endif

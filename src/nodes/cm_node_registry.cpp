@@ -4,6 +4,8 @@
 #include "nodes/binary/cm_binary.hpp"
 #include "nodes/math/cm_mean.hpp"
 #include "nodes/rnn/cm_lstm.hpp"
+#include "nodes/op/cm_concat.hpp"
+#include "nodes/op/cm_reshape.hpp"
 
 using namespace CyanMycelium;
 
@@ -56,7 +58,11 @@ NodeRegistry::NodeRegistry(int initialCapacity) : _types(initialCapacity)
 
        // math
        __REGISTER__NODE(Mean);
+*/
+    // rnn
+    __REGISTER__NODE(LSTM);
 
-       // rnn
-       __REGISTER__NODE(LSTM);*/
+    // op
+    __REGISTER__NODE(Concat);
+    __REGISTER__NODE(Reshape);
 };

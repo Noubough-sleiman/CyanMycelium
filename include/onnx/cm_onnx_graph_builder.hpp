@@ -25,12 +25,14 @@ namespace CyanMycelium
         bool _readGraph(BlueSteelLadyBug ::PBReader *);
         bool _readNode(char *, BlueSteelLadyBug ::PBReader *);
         bool _readValueInfos(char *, BlueSteelLadyBug ::PBReader *);
-        bool _readInitializer(BlueSteelLadyBug ::PBReader *);
+        bool _readInitializer(char *, BlueSteelLadyBug ::PBReader *);
         bool _readTensorType(Tensor *, BlueSteelLadyBug ::PBReader *);
         bool _readTensorShape(Tensor *, BlueSteelLadyBug ::PBReader *);
         Node *_createNode(const char *);
         Link *_createLink();
         Link *_getOrCreateLink(const char *);
+        virtual void *_malloc(size_t s) { return cm_malloc(s); }
+        virtual void _free(void *p) { return cm_free(p); }
     };
 }
 #endif
