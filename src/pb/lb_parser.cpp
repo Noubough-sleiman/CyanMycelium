@@ -471,3 +471,32 @@ bool PBReader::readValue_s(lb_byte_t *v, int s)
     return true;
 }
 
+bool PBReader::readPacked(lb_int32_t *v, WireType wt)
+{
+    return _readPacked<lb_int32_t>(v, wt);
+}
+
+bool PBReader::readPacked(lb_int64_t *v, WireType wt)
+{
+    return _readPacked<lb_int64_t>(v, wt);
+}
+
+bool PBReader::readPacked(lb_uint32_t *v, WireType wt)
+{
+    return _readPacked<lb_uint32_t>(v, wt);
+}
+
+bool PBReader::readPacked(lb_uint64_t *v, WireType wt)
+{
+    return _readPacked<lb_uint64_t>(v, wt);
+}
+
+bool PBReader::readPacked(lb_float_t *v)
+{
+    return _readPacked<lb_float_t>(v, PB_32BIT);
+}
+
+bool PBReader::readPacked(lb_double_t *v)
+{
+    return _readPacked<lb_double_t>(v, PB_64BIT);
+}

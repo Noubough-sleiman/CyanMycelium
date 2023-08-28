@@ -257,6 +257,11 @@ bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
         case (NODE_INPUT_FIELD_NUMBER):
         {
             __READ(reader->readValue_s(cache, CM_KEY_MAX_LENGTH), return false)
+            // some inputs in ONNX can be left blank to separate topics
+            if (!cache[0])
+            {
+                break;
+            }
             Link *l = this->_getOrCreateLink(cache);
             if (l)
             {
