@@ -6,6 +6,14 @@
 
 namespace CyanMycelium
 {
+#define ERROR_INFOS_MAX_LENGTH 128
+
+#define ONNX_GB_SUCCESS 0
+#define ONNX_GB_UNSUPPORTED_NODE 100
+#define ONNX_GB_UNSUPPORTED_TENSOR_DATA_TYPE 101
+#define ONNX_GB_UNSUPPORTED_TENSOR_DIM 102
+#define ONNX_GB_READ_ERROR 200
+#define ONNX_GB_SYSTEM_ERROR 300
 
     class OnnxGraphBuilder
     {
@@ -21,6 +29,9 @@ namespace CyanMycelium
         BlueSteelLadyBug ::PBReader *_reader;
         NodeCollection _nodes;
         KeyValueCollection<Link *> _links;
+
+        int _error;
+        char _errorInfos[ERROR_INFOS_MAX_LENGTH];
 
         bool _readGraph(BlueSteelLadyBug ::PBReader *);
         bool _readNode(char *, BlueSteelLadyBug ::PBReader *);

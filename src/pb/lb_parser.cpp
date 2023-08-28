@@ -5,38 +5,30 @@ using namespace BlueSteelLadyBug;
 template <typename T>
 bool PBReader::_readPacked(T *v, WireType wt)
 {
-    switch (_status.wireType)
-    {
-    case PB_LEN:
-    {
-        lb_uint64_t size;
-        if (!readLength(&size))
-        {
-            return false;
-        }
-        _invalidateLengthReaded();
-        size_t pos = getPosition();
-        size_t end = pos + size;
-        bool r = true;
-        if (pos < end)
-        {
-            do
-            {
-                if (!_readValue(v, wt))
-                {
-                    r = false;
-                    break;
-                }
-                v++;
-            } while (getPosition() < end);
-        }
-        return r;
-    }
-    default:
+    if (_status.wireType != PB_LEN)
     {
         return false;
     }
+    lb_uint64_t size;
+    if (!readLength(&size))
+    {
+        return false;
     }
+    _invalidateLengthReaded();
+    size_t pos = getPosition();
+    size_t end = pos + size;
+    if (pos < end)
+    {
+        do
+        {
+            if (!_readValue(v, wt))
+            {
+                return false;
+            }
+            v++;
+        } while (getPosition() < end);
+    }
+    return true;
 }
 
 bool PBReader::readLength(lb_uint64_t *v, bool validate)
@@ -479,32 +471,3 @@ bool PBReader::readValue_s(lb_byte_t *v, int s)
     return true;
 }
 
-bool PBReader::readPacked(lb_int32_t *v, WireType wt)
-{
-    return _readPacked<lb_int32_t>(v, wt);
-}
-
-bool PBReader::readPacked(lb_int64_t *v, WireType wt)
-{
-    return _readPacked<lb_int64_t>(v, wt);
-}
-
-bool PBReader::readPacked(lb_uint32_t *v, WireType wt)
-{
-    return _readPacked<lb_uint32_t>(v, wt);
-}
-
-bool PBReader::readPacked(lb_uint64_t *v, WireType wt)
-{
-    return _readPacked<lb_uint64_t>(v, wt);
-}
-
-bool PBReader::readPacked(lb_float_t *v)
-{
-    return _readPacked<lb_float_t>(v, PB_32BIT);
-}
-
-bool PBReader::readPacked(lb_double_t *v)
-{
-    return _readPacked<lb_double_t>(v, PB_64BIT);
-}

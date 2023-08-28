@@ -41,6 +41,8 @@ extern "C"
 #define cm_realloc(ptr, size) realloc((ptr), (size))
 #define cm_free(ptr) free((ptr))
 
+#define cm_strcpy_s(dest, size, src) strcpy_s((dest), (size), (src))
+
 #define cm_queue_handle_t EmbeddedQueuePtr
 
 #ifndef max

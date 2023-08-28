@@ -74,12 +74,12 @@ namespace BlueSteelLadyBug
         bool readValue_s(char *, int);
         bool readValue_s(lb_byte_t *, int);
 
-        bool readPacked(lb_int32_t *, WireType);
-        bool readPacked(lb_int64_t *, WireType);
-        bool readPacked(lb_uint32_t *, WireType);
-        bool readPacked(lb_uint64_t *, WireType);
-        bool readPacked(lb_float_t *);
-        bool readPacked(lb_double_t *);
+        bool readPacked(lb_int32_t *v, WireType wt) { return _readPacked<lb_int32_t>(v, wt); }
+        bool readPacked(lb_int64_t *v, WireType wt) { return _readPacked<lb_int64_t>(v, wt); }
+        bool readPacked(lb_uint32_t *v, WireType wt) { return _readPacked<lb_uint32_t>(v, wt); }
+        bool readPacked(lb_uint64_t *v, WireType wt) { return _readPacked<lb_uint64_t>(v, wt); }
+        bool readPacked(lb_float_t *v) { return _readPacked<lb_float_t>(v, PB_32BIT); }
+        bool readPacked(lb_double_t *v) { return _readPacked<lb_double_t>(v, PB_64BIT); }
 
         PBReader *getSubMessageReader();
 
