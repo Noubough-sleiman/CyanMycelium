@@ -47,7 +47,6 @@ namespace CyanMycelium
 
     class Tensor
     {
-
     public:
         Tensor() : Tensor(nullptr, 1)
         {

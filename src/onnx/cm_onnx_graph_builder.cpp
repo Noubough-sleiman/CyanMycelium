@@ -250,6 +250,7 @@ bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
             // reach this point we can set the attribute.
             if (!n->TrySetAtt(cache, value))
             {
+                SET_ERROR_1(ONNX_GB_UNSUPPORTED_ATTRIBUTE, cache)
                 return false;
             }
             break;
