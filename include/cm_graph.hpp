@@ -12,6 +12,7 @@ namespace CyanMycelium
 {
     // forward declaration
     class Node;
+    class Operator;
     class Link;
     class UnaryOperator;
     class BinaryOperator;
@@ -27,7 +28,7 @@ namespace CyanMycelium
     public:
         IMemoryManagerPtr MemoryManager;
 
-        virtual bool Activate(Node *) = 0;
+        virtual bool Activate(Operator *) = 0;
         virtual bool Activate(Link *) = 0;
 
     protected:
@@ -106,7 +107,7 @@ namespace CyanMycelium
         LinkCollection Onsc;
         void Lock(int timeoutMillis = CM_INFINITE) { _lock.Take(timeoutMillis); }
         void Unlock() { _lock.Give(); }
-        virtual bool Activate(IActivationCtxPtr ctx) = 0;
+
         // you may use attribute binding logic by name or index.
         virtual bool TrySetAtt(const char *n, Att_value_t value) { return true; }
         virtual bool TrySetAtt(int index, Att_value_t value) { return true; }
@@ -129,6 +130,10 @@ namespace CyanMycelium
     /// @brief
     class Operator : public Node
     {
+    public:
+        virtual bool Activate(IActivationCtxPtr ctx) = 0;
+        virtual bool CanModifyData() { return true; }
+
     protected:
         bool ForwardOuput(TensorPtr output, IActivationCtxPtr ctx);
     };
@@ -167,7 +172,7 @@ namespace CyanMycelium
     /// and Object Negativ Semi Conductor (Onsc) as output
     /// please not this is a Runtime support and all the necessay initialization has to be done by
     /// a corresponding GraphBuilder
-    class Graph : public Node
+    class Graph : public Operator
     {
     public:
         Graph(int initialNodesCollectionSize = CM_DEFAULT_GRAPH_COLLECTION_CAPACITY, int initialLinkCollectionSize = CM_DEFAULT_GRAPH_COLLECTION_CAPACITY) : Nodes(max(initialNodesCollectionSize, CM_DEFAULT_COLLECTION_CAPACITY)),
@@ -175,7 +180,9 @@ namespace CyanMycelium
         {
         }
         ~Graph() {}
+
         /// @brief NULL terminated list of nodes.
+
         NodeCollection Nodes;
         /// @brief NULL terminated list of links.
         LinkCollection Links;

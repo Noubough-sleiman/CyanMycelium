@@ -53,7 +53,7 @@ bool InferenceSession ::RunAsync(KeyValueCollection<void *> *inputs, KeyValueCol
     int c = nodes.Count();
     for (int i = 0; i != c; ++i)
     {
-      Activate(nodes[i]);
+      Activate((Operator*)nodes[i]);
     }
   }
   return true;
@@ -79,7 +79,7 @@ bool InferenceSession ::Activate(LinkPtr l)
       l->Activate(this);
       if (__AreLinkReady(nextNode->Opsc))
       {
-        this->Activate(nextNode);
+        this->Activate((Operator*)nextNode);
       }
       nextNode->Unlock();
 
@@ -88,7 +88,7 @@ bool InferenceSession ::Activate(LinkPtr l)
 
     // we activate the node
     l->Activate(this);
-    this->Activate(nextNode);
+    this->Activate((Operator*)nextNode);
     return true;
   }
 
@@ -105,7 +105,7 @@ bool InferenceSession ::Activate(LinkPtr l)
   return _wait.Send(&_target);
 }
 
-bool InferenceSession ::Activate(NodePtr node)
+bool InferenceSession ::Activate(OperatorPtr node)
 {
   ActivationEvent e = {CM_ACTIVATION_NODE, this, node};
   return _queue->Send(&e);

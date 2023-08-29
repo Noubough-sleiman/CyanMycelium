@@ -29,7 +29,7 @@ namespace CyanMycelium
 
     // IActivation context implementation
     bool Activate(LinkPtr) override;
-    bool Activate(NodePtr) override;
+    bool Activate(OperatorPtr) override;
 
   private:
     GraphPtr _model;

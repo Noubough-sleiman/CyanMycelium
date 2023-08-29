@@ -61,7 +61,7 @@ void InferenceEngine ::Consume(ActivationEvent &e)
   {
   case CM_ACTIVATION_NODE:
   {
-    NodePtr node = (NodePtr)e.Content;
+    OperatorPtr node = (OperatorPtr)e.Content;
     node->Activate(context);
     int count = node->Onsc.Count();
     for (int i = 0; i != count; ++i)

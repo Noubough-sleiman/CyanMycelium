@@ -21,11 +21,6 @@ bool Shape ::Activate(IActivationCtxPtr ctx)
         Link *l = this->Onsc[i];
         l->Payload.Set(oneDimShape, 1, TDT_UINT32);
         l->Payload.Data = shape + a;
-        // then activate
-        if (!ctx->Activate(l))
-        {
-            return false; // activation failed.
-        }
     }
     return true;
 }
