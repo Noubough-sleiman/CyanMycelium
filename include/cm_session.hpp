@@ -11,6 +11,21 @@ namespace CyanMycelium
 
   typedef KeyValueCollection<void *> DataCollections;
 
+  struct TensorRef
+  {
+    Tensor Value;
+    int Count;
+    union
+    {
+      struct
+      {
+        unsigned char Owned : 1;
+        unsigned char Reserved : 7;
+      } Bits;
+      unsigned char Value;
+    } Mask;
+  };
+
   class InferenceSession : public IActivationCtx
   {
   public:
@@ -36,6 +51,7 @@ namespace CyanMycelium
     Queue *_queue;
     Queue _wait;
     DataCollections *_target;
+    TensorRef _refs[];
   };
 
   typedef InferenceSession *InferenceSessionPtr;

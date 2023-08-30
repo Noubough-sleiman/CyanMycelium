@@ -66,7 +66,7 @@ namespace CyanMycelium
     T *xdata = static_cast<T *>(x->Data);                                               \
     T *ydata = static_cast<T *>(y->Data);                                               \
     T *res = static_cast<T *>(out->Data);                                               \
-    if (x->ShapesAreEqual(y))                                                           \
+    if (x->AreShapesEqual(y))                                                           \
     {                                                                                   \
       for (size_t i = 0; i < x->Count; ++i)                                             \
       {                                                                                 \
@@ -84,7 +84,7 @@ namespace CyanMycelium
     T *xdata = static_cast<T *>(x->Data);                                               \
     T *ydata = static_cast<T *>(y->Data);                                               \
     T *res = static_cast<T *>(out->Data);                                               \
-    if (x->ShapesAreEqual(y))                                                           \
+    if (x->AreShapesEqual(y))                                                           \
     {                                                                                   \
       fname *casted = static_cast<fname *>(node);                                       \
       for (size_t i = 0; i < x->Count; ++i)                                             \

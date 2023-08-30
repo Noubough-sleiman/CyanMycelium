@@ -67,10 +67,25 @@ namespace CyanMycelium
         {
             Oini = nullptr;
             Ofin = nullptr;
+            Flags.Value = 0;
         };
+
         Node *Oini;
         Node *Ofin;
+        /// @brief the tensor is holding the infos of the data + a pointer on the data itself
+        /// The informations are NOT intended to be mutable.
         Tensor Payload;
+        /// @brief the flags are used for diverse case, such mark the data as readonly or mutable.
+        union
+        {
+            struct
+            {
+                unsigned char ReadOnly : 1;
+                unsigned char Reserved : 7;
+            } bits;
+            unsigned char Value;
+        } Flags;
+
         virtual bool Activate(IActivationCtxPtr ctx);
     };
 
@@ -135,8 +150,9 @@ namespace CyanMycelium
         virtual bool CanModifyData() { return true; }
 
     protected:
-        bool ForwardOuput(TensorPtr output, IActivationCtxPtr ctx);
+        bool _Forward(Tensor *, IActivationCtxPtr ctx);
     };
+
     typedef Operator *OperatorPtr;
 
     /// @brief

@@ -45,7 +45,29 @@ namespace CyanMycelium
         TDT_COUNT
     } tensor_data_type_t;
 
-    class Tensor
+    class TensorInfos
+    {
+    public:
+        /// @brief build a tensor using shape and dimension
+        /// @param shape the shape as an array of the size of each dimension
+        /// @param dimension the number of axes or indices required to access the elements of the tensor.
+        TensorInfos(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED)
+        {
+            Set(shape, dimension, type);
+        }
+
+        virtual TensorInfos *Set(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED);
+
+        size_t Size;                          // size in byte, must be equal to Count * sizeof(type)
+        size_t Count;                         // number of elements
+        tensor_data_type_t Type;              // type of underlying elements
+        uint8_t Dimension;                    // dimension of tensor
+        uint64_t Shape[TENSOR_MAX_DIMENSION]; // shape of tensor.
+
+        bool AreShapesEqual(TensorInfos *other);
+    };
+
+    class Tensor : public TensorInfos
     {
     public:
         Tensor() : Tensor(nullptr, 1)
@@ -54,24 +76,17 @@ namespace CyanMycelium
         /// @brief build a tensor using shape and dimension
         /// @param shape the shape as an array of the size of each dimension
         /// @param dimension the number of axes or indices required to access the elements of the tensor.
-        Tensor(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED)
+        Tensor(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) : TensorInfos(shape, dimension, type)
         {
-            Set(shape, dimension, type);
-            Data = nullptr;
         }
 
-        Tensor *Set(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED);
+        TensorInfos *Set(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) override
+        {
+            this->Data = nullptr;
+            return TensorInfos::Set(shape, dimension, type);
+        }
 
-        size_t Size;                          // size in byte, must be equal to Count * sizeof(type)
-        size_t Count;                         // number of elements
-        void *Data;                           // byte array
-        tensor_data_type_t Type;              // type of underlying elements
-        uint8_t Dimension;                    // dimension of tensor
-        uint64_t Shape[TENSOR_MAX_DIMENSION]; // shape of tensor.
-
-        bool ShapesAreEqual(Tensor *other);
-
-        Tensor *Clone();
+        void *Data; // byte array
     };
 
     typedef Tensor *TensorPtr;

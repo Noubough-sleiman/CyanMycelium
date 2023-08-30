@@ -4,6 +4,16 @@ using namespace CyanMycelium;
 
 bool Link ::Activate(IActivationCtxPtr ctx)
 {
+  // we use the link activation to manage the memory
+  if (this->Flags.bits.ReadOnly)
+  {
+    if (((Operator *)this->Ofin)->CanModifyData())
+    {
+      // we MUST allocate new data
+      void *newData = ctx->MemoryManager->Clone(this->Payload.Data, this->Payload.Size);
+      this->Payload.Data = newData;
+    }
+  }
   return true;
 }
 
@@ -29,52 +39,45 @@ void LinkCollection ::Ofin(Collection<Node *> *target)
     }
   }
 }
-bool Operator::ForwardOuput(TensorPtr output, IActivationCtxPtr ctx)
-{
-  unsigned int count = this->Onsc.Count();
-  switch (count)
-  {
-  case 0:
-    return true;
-  case 1:
-  {
-    LinkPtr l = Onsc[0];
-    l->Payload.Data = output->Data;
-    return ctx->Activate(l);
-  }
-  default:
-  {
-    LinkPtr l = Onsc[0];
-    l->Payload.Data = output->Data;
-    if (!ctx->Activate(l))
-    {
-      return false;
-    }
 
-    for (unsigned int i = 1; i < count; ++i)
-    {
-      l = Onsc[i];
-      void *buffer = ctx->MemoryManager->Clone(output->Data, output->Size);
-      if (buffer == nullptr)
-      {
-        return false;
-      }
-      l->Payload.Data = buffer;
-      if (!ctx->Activate(l))
-      {
-        return false; // activation failed.
-      }
-    }
+bool Operator::_Forward(Tensor *output, IActivationCtxPtr ctx)
+{
+  int count = this->Onsc.Count();
+  if (count == 0)
+  {
     return true;
   }
+
+  if (count == 1)
+  {
+    Link *l = this->Onsc[0];
+    l->Payload.Data = output->Data;
   }
+
+  bool reserved = false;
+  for (int i = 0; i != count; i++)
+  {
+    // prepare the links
+    Link *l = this->Onsc[i];
+    l->Payload.Data = output->Data;
+    l->Flags.bits.ReadOnly = 0;
+    if (l->Ofin && ((Operator *)l->Ofin)->CanModifyData())
+    {
+      if (!reserved)
+      {
+        reserved = true;
+        continue;
+      }
+      l->Flags.bits.ReadOnly = 1;
+    }
+  }
+  return true;
 }
 
 bool UnaryOperator::Activate(IActivationCtxPtr ctx)
 {
   // we must have a single input
   unsigned int count = this->Opsc.Count();
-
   if (count == 1)
   {
     LinkPtr a = this->Opsc[0];
@@ -93,7 +96,7 @@ bool UnaryOperator::Activate(IActivationCtxPtr ctx)
       {
         w(input, output, this);
       }
-      return this->ForwardOuput(output, ctx);
+      this->_Forward(output, ctx);
     }
   }
   return false;
@@ -137,12 +140,7 @@ bool BinaryOperator::Activate(IActivationCtxPtr ctx)
         // TODO -> build a strategy about the resulting tensor
         w(tx, ty, output, this);
       }
-
-      // free the smaller buffer.
-      ctx->MemoryManager->Free(ty->Data);
-      ty->Data = nullptr;
-
-      return this->ForwardOuput(output, ctx);
+      return this->_Forward(output, ctx);
     }
   }
   return false;

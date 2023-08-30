@@ -28,7 +28,7 @@ namespace CyanMycelium
     return __TensorData_sizes__[(int)type];
   }
 
-  TensorPtr Tensor::Set(const uint64_t *shape, int dimension, tensor_data_type_t type)
+  TensorInfos *TensorInfos::Set(const uint64_t *shape, int dimension, tensor_data_type_t type)
   {
     size_t c = 1;
     for (int i = 0; i != TENSOR_MAX_DIMENSION; i++)
@@ -45,12 +45,11 @@ namespace CyanMycelium
     this->Dimension = dimension < TENSOR_MAX_DIMENSION ? dimension : TENSOR_MAX_DIMENSION;
     this->Count = c;
     this->Size = c * __GetSizeType(type);
-    this->Data = nullptr;
     this->Type = type;
     return this;
   };
 
-  bool Tensor::ShapesAreEqual(TensorPtr other)
+  bool TensorInfos::AreShapesEqual(TensorInfos *other)
   {
 
     if (other == nullptr || this->Dimension != other->Dimension)

@@ -9,18 +9,20 @@ bool Shape ::Activate(IActivationCtxPtr ctx)
     uint64_t *shape = this->Opsc[0]->Payload.Shape;
     int a = _mask.bits._hasStart ? this->_start : 0;
     int b = _mask.bits._hasEnd ? this->_end : this->Opsc[0]->Payload.Dimension - 1;
-    a = __ENSURE_OFFSET_POSITIV(a,this->Opsc[0]->Payload.Dimension);
-    b = __ENSURE_OFFSET_POSITIV(b,this->Opsc[0]->Payload.Dimension);
+    a = __ENSURE_OFFSET_POSITIV(a, this->Opsc[0]->Payload.Dimension);
+    b = __ENSURE_OFFSET_POSITIV(b, this->Opsc[0]->Payload.Dimension);
     uint64_t oneDimShape[1];
     oneDimShape[0] = (uint64_t)(b - a + 1);
 
     int count = this->Onsc.Count();
     for (int i = 0; i != count; i++)
     {
-        // prepare the link
+        // prepare the links
         Link *l = this->Onsc[i];
         l->Payload.Set(oneDimShape, 1, TDT_UINT32);
         l->Payload.Data = shape + a;
+        // do NOT let any subsequent operator modify the value.
+        l->Flags.bits.ReadOnly = 1;
     }
     return true;
 }
