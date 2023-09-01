@@ -9,51 +9,36 @@ namespace CyanMycelium
 {
 #define CM_SESSION_WAIT_QUEUE_SIZE 8
 
-  typedef KeyValueCollection<void *> DataCollections;
-
-  struct TensorRef
+  enum ActivationEventType
   {
-    Tensor Value;
-    int Count;
-    union
-    {
-      struct
-      {
-        unsigned char Owned : 1;
-        unsigned char Reserved : 7;
-      } Bits;
-      unsigned char Value;
-    } Mask;
+    CM_ACTIVATION_LINK,
+    CM_ACTIVATION_NODE,
+    CM_ACTIVATION_OUTPUT
   };
 
-  class InferenceSession : public IActivationCtx
+  struct ActivationEvent
+  {
+    ActivationEventType Type;
+    ActivationContext *Context;
+    void *Content;
+  };
+
+  class AsyncActivationContext : public ActivationContext
   {
   public:
-    InferenceSession(GraphPtr model, Queue *queue, IMemoryManagerPtr mm) : IActivationCtx(mm), _wait(CM_SESSION_WAIT_QUEUE_SIZE, sizeof(void *))
+    AsyncActivationContext(GraphPtr model, IMemoryManagerPtr mm, Queue *queue) : ActivationContext(model, mm)
     {
-      _model = model;
       _queue = queue;
     };
 
-    TensorPtr GetInputInfos(const char *name);
-    TensorPtr GetOutputInfos(const char *name = nullptr);
-    GraphPtr GetModel() { return _model; }
+    void AwaitOutputs(int timeout = CM_INFINITE);
 
-    bool RunAsync(DataCollections *, DataCollections *);
-    DataCollections *AwaitOutputs(int timeout = CM_INFINITE);
-
-    // IActivation context implementation
-    bool Activate(LinkPtr) override;
+  protected:
     bool Activate(OperatorPtr) override;
+    bool OnOutputReady() override;
 
   private:
-    GraphPtr _model;
     Queue *_queue;
-    Queue _wait;
-    DataCollections *_target;
-    TensorRef _refs[];
   };
-
-  typedef InferenceSession *InferenceSessionPtr;
 }
 #endif

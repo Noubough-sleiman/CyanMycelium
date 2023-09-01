@@ -4,13 +4,18 @@ using namespace CyanMycelium;
 
 #define __ENSURE_OFFSET_POSITIV(a, d) a < 0 ? d + a : a
 
-bool Shape ::Activate(IActivationCtxPtr ctx)
+bool Shape ::Activate(ActivationContext *ctx)
 {
-    uint64_t *shape = this->Opsc[0]->Payload.Shape;
+    TensorPtr infos = this->Opsc[0]->GetPayloadInfos();
+    uint64_t *shape = infos->Shape;
+    uint8_t dimension = infos->Dimension;
+
     int a = _mask.bits._hasStart ? this->_start : 0;
-    int b = _mask.bits._hasEnd ? this->_end : this->Opsc[0]->Payload.Dimension - 1;
-    a = __ENSURE_OFFSET_POSITIV(a, this->Opsc[0]->Payload.Dimension);
-    b = __ENSURE_OFFSET_POSITIV(b, this->Opsc[0]->Payload.Dimension);
+    int b = _mask.bits._hasEnd ? this->_end : dimension - 1;
+
+    a = __ENSURE_OFFSET_POSITIV(a, dimension);
+    b = __ENSURE_OFFSET_POSITIV(b, dimension);
+
     uint64_t oneDimShape[1];
     oneDimShape[0] = (uint64_t)(b - a + 1);
 
@@ -19,10 +24,15 @@ bool Shape ::Activate(IActivationCtxPtr ctx)
     {
         // prepare the links
         Link *l = this->Onsc[i];
-        l->Payload.Set(oneDimShape, 1, TDT_UINT32);
-        l->Payload.Data = shape + a;
+        TensorRefPtr ref = ctx->GetPayloadRef(l->Id);
+        if (!ref)
+        {
+            return false;
+        }
+        ref->Value.Set(oneDimShape, 1, TDT_UINT32);
+        ref->Value.Data = shape + a;
         // do NOT let any subsequent operator modify the value.
-        l->Flags.bits.ReadOnly = 1;
+        ref->Flags.Bits.ReadOnly = 1;
     }
     return true;
 }

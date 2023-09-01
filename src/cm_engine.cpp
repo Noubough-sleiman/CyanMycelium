@@ -2,9 +2,9 @@
 
 using namespace CyanMycelium;
 
-InferenceSessionPtr InferenceEngine ::CreateSession(GraphPtr model, IMemoryManagerPtr memoryManager)
+AsyncActivationContext *InferenceEngine ::CreateSession(GraphPtr model, IMemoryManagerPtr memoryManager)
 {
-  return new InferenceSession(model, &_queue, memoryManager);
+  return new AsyncActivationContext(model, memoryManager, &_queue);
 }
 
 void InferenceEngine ::Start()
@@ -55,22 +55,20 @@ unsigned long InferenceEngine ::Run(void *)
 
 void InferenceEngine ::Consume(ActivationEvent &e)
 {
-  IActivationCtx *context = e.Context;
+  ActivationContext *context = e.Context;
 
   switch (e.Type)
   {
   case CM_ACTIVATION_NODE:
   {
     OperatorPtr node = (OperatorPtr)e.Content;
-    node->Activate(context);
-    int count = node->Onsc.Count();
-    for (int i = 0; i != count; ++i)
+    if (node)
     {
-      context->Activate(node->Onsc[i]);
+      context->ActivationContext::Activate(node);
     }
     break;
   }
-  case CM_ACTIVATION_LINK:
+  default:
   {
     break;
   }

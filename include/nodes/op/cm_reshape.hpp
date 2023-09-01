@@ -8,7 +8,7 @@ namespace CyanMycelium
     {
     public:
         Reshape() : Operator(){};
-        bool Activate(IActivationCtxPtr ctx) override { return true; }
+        bool Activate(ActivationContext *ctx) override { return true; }
     };
 }
 #endif

@@ -202,27 +202,6 @@ namespace CyanMycelium
   class KeyValueCollection : public Collection<KeyValue<T>>
   {
 
-    class ValueIterator : public Collection<KeyValue<T>>::Iterator<T>
-    {
-    public:
-      ValueIterator(KeyValueCollection c) : Collection<KeyValue<T>>::Iterator<T>(c) {}
-      virtual T *Current() override
-      {
-        return this->_i >= 0 ? &(this->_src->_items + this->_i)->Value : nullptr;
-      }
-    };
-
-    class KeyIterator : public Collection<KeyValue<T>>::Iterator<char *>
-    {
-    public:
-      KeyIterator(KeyValueCollection c) : Collection<KeyValue<T>>::Iterator<char *>(c) {}
-
-      virtual char *Current() override
-      {
-        return this->_i >= 0 ? (this->_src->_items + this->_i)->Key : nullptr;
-      }
-    };
-
   public:
     KeyValueCollection(unsigned int initialCapacity = 2) : Collection<KeyValue<T>>(initialCapacity)
     {
@@ -270,27 +249,6 @@ namespace CyanMycelium
       entry->Value = value;
       this->_count++;
     }
-
-    ValueIterator Values()
-    {
-      return ValueIterator(this);
-    }
-
-    KeyIterator Keys()
-    {
-      return KeyIterator(this);
-    }
   };
-
-#define KEY_VALUE_COLLECTION_COPY(src, target, f) \
-  auto iterator = (src).GetIterator();            \
-  if (iterator.MoveNext())                        \
-  {                                               \
-    do                                            \
-    {                                             \
-      auto entry = iterator.Current();            \
-      (target)->Set(entry->Key, f);               \
-    } while (iterator.MoveNext());                \
-  }
 }
 #endif

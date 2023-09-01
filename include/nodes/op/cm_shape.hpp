@@ -13,7 +13,7 @@ namespace CyanMycelium
             _mask.value = 0;
         };
 
-        bool Activate(IActivationCtxPtr ctx) override;
+        bool Activate(ActivationContext *ctx) override;
         bool TrySetAtt(const char *n, Att_value_t v) override;
 
     private:

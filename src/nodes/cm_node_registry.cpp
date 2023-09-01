@@ -11,7 +11,7 @@ using namespace CyanMycelium;
 
 NodeRegistry NodeRegistry::__Shared;
 
-NodePtr NodeRegistry::ForName(const char *n)
+Operator * NodeRegistry::ForName(const char *n)
 {
     NodeInitializer_fn initializer = __Shared._types.Get(n);
     if (initializer)

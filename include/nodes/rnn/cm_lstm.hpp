@@ -20,26 +20,26 @@ namespace CyanMycelium
 
     /// @brief The input data (usually a sequence of vectors or embeddings).
     /// @return corresponding tensor reference
-    Tensor &X() { return this->Opsc[LSTM_X_INDEX]->Payload; }
+    TensorRef *X(ActivationContext *ctx) { return ctx->GetPayloadRef(this->Opsc[LSTM_X_INDEX]->Id); }
 
     /// @brief Weight matrix for the input data.
     /// @return corresponding tensor reference
-    Tensor &W() { return this->Opsc[LSTM_W_INDEX]->Payload; }
+    Tensor *W() { return this->Opsc[LSTM_W_INDEX]->GetPayloadInfos(); }
 
     /// @brief Weight matrix for the recurrent connections.
     /// @return corresponding tensor reference
-    Tensor &R() { return this->Opsc[LSTM_R_INDEX]->Payload; }
+    Tensor *R() { return this->Opsc[LSTM_R_INDEX]->GetPayloadInfos(); }
 
     /// @brief Biases for the LSTM gates.
     /// @return corresponding tensor reference
-    Tensor &B() { return this->Opsc[LSTM_B_INDEX]->Payload; }
+    Tensor *B() { return this->Opsc[LSTM_B_INDEX]->GetPayloadInfos(); }
 
     /// @brief  Performs forward propagation for the LSTM node.
     /// This method executes the computations associated with the LSTM node.
     /// It processes the input data and produces output sequences and states.
     /// @param ctx
     /// @return
-    bool Activate(IActivationCtxPtr ctx) override { return true; }
+    bool Activate(ActivationContext *ctx) override { return true; }
   };
 }
 #endif

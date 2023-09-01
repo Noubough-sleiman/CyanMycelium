@@ -26,6 +26,10 @@ extern "C"
     typedef unsigned char cm_byte_t;
     typedef unsigned char cm_fastbyte_t;
 
+    typedef long cm_clock_t;
+
+#define cm_clock() clock();
+
 #define CM_INFINITE 0xFFFFFFFF
 #define CM_POLL 0x00000000
 

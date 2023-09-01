@@ -30,7 +30,7 @@ namespace CyanMycelium
       _options = options;
     };
 
-    InferenceSessionPtr CreateSession(GraphPtr model, IMemoryManagerPtr memoryManager);
+    AsyncActivationContext *CreateSession(GraphPtr model, IMemoryManagerPtr memoryManager);
     void Start();
     void Stop();
     bool IsStarted();

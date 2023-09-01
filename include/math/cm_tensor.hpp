@@ -56,7 +56,7 @@ namespace CyanMycelium
             Set(shape, dimension, type);
         }
 
-        virtual TensorInfos *Set(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED);
+        TensorInfos *Set(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED);
 
         size_t Size;                          // size in byte, must be equal to Count * sizeof(type)
         size_t Count;                         // number of elements
@@ -80,10 +80,10 @@ namespace CyanMycelium
         {
         }
 
-        TensorInfos *Set(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) override
+        Tensor *Set(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED, void *data = nullptr)
         {
-            this->Data = nullptr;
-            return TensorInfos::Set(shape, dimension, type);
+            this->Data = data;
+            return (Tensor *)TensorInfos::Set(shape, dimension, type);
         }
 
         void *Data; // byte array

@@ -1,10 +1,9 @@
-#ifndef _CM_GRAPH__
-#define _CM_GRAPH__
+#ifndef _CM_GRAPH_
+#define _CM_GRAPH_
 
 #include "cm.h"
-#include "concurrent/cm_concurrent.hpp"
-#include "math/cm_tensor.hpp"
-#include "memory/cm_memory_manager.hpp"
+
+#include "cm_activation.hpp"
 #include "nodes/cm_nodes_commons.hpp"
 #include "collections/cm_collections.hpp"
 
@@ -17,89 +16,53 @@ namespace CyanMycelium
     class UnaryOperator;
     class BinaryOperator;
     class LinkCollection;
-    class NodeCollection;
 
-    typedef void (*UnaryFunctionPtr)(Tensor *, Tensor *, UnaryOperator *);
-    typedef void (*BinaryFunctionPtr)(Tensor *, Tensor *, Tensor *, BinaryOperator *);
-
-    /// @brief
-    class IActivationCtx
-    {
-    public:
-        IMemoryManagerPtr MemoryManager;
-
-        virtual bool Activate(Operator *) = 0;
-        virtual bool Activate(Link *) = 0;
-
-    protected:
-        IActivationCtx(IMemoryManagerPtr mm)
-        {
-            MemoryManager = mm;
-        }
-    };
-    typedef IActivationCtx *IActivationCtxPtr;
-
-    enum ActivationEventType
-    {
-        CM_ACTIVATION_LINK,
-        CM_ACTIVATION_NODE,
-    };
-
-    struct ActivationEvent
-    {
-        ActivationEventType Type;
-        IActivationCtx *Context;
-        void *Content;
-    };
-
-    /// @brief
+    /// @brief The base class for all graph items.
     class GraphItem
     {
+    public:
+        // optional Identifier.
+        int32_t Id = -1;
     };
     typedef GraphItem *GraphItemPtr;
 
-    /// @brief
+    /// @brief The base class for all links.
     class Link : public GraphItem
     {
     public:
         Link() : Link(nullptr, 1){};
-        Link(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) : Payload(shape, dimension, type)
+        Link(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) : _payloadInfos(shape, dimension, type)
         {
             Oini = nullptr;
             Ofin = nullptr;
-            Flags.Value = 0;
         };
 
-        Node *Oini;
-        Node *Ofin;
-        /// @brief the tensor is holding the infos of the data + a pointer on the data itself
-        /// The informations are NOT intended to be mutable.
-        Tensor Payload;
-        /// @brief the flags are used for diverse case, such mark the data as readonly or mutable.
-        union
-        {
-            struct
-            {
-                unsigned char ReadOnly : 1;
-                unsigned char Reserved : 7;
-            } bits;
-            unsigned char Value;
-        } Flags;
+        /// @brief Activate the link.
+        /// @param ctx the activation context
+        /// @return  true if the activation is successful and false otherwise.
+        virtual bool Activate(ActivationContext *ctx);
 
-        virtual bool Activate(IActivationCtxPtr ctx);
-    };
+        /// @brief  Get the payload infos of the link. This is the Tensor info hol by the link itself.
+        /// @return  the payload infos.
+        virtual Tensor *GetPayloadInfos() { return &this->_payloadInfos; }
 
-    typedef Link *LinkPtr;
+        /// @brief Set the payload infos of the link.
+        /// @param shape the shape as an array of the size of each dimension
+        /// @param dimension the number of axes or indices required to access the elements of the tensor.
+        /// @param type the type of the underlying elements
+        /// @param data the data to be set. Default is null.
+        virtual void SetPayloadInfos(const uint64_t *shape, int dimension, tensor_data_type_t type, void *data = nullptr) { this->_payloadInfos.Set(shape, dimension, type, data); }
 
-    /// @brief
-    class LinkCollection : public Collection<LinkPtr>
-    {
-    public:
-        LinkCollection(unsigned int initialCapacity = 2) : Collection<LinkPtr>(initialCapacity)
-        {
-        }
-        void Oini(Collection<Node *> *target);
-        void Ofin(Collection<Node *> *);
+        /// @brief the operator that is the source of the link. May be null for input links.
+        Operator *Oini;
+        /// @brief the operator that is the destination of the link. May be null for output links.
+        Operator *Ofin;
+
+    protected:
+        /// @brief the tensor is holding the infos of the data.
+        /// Additionaly, to support Initializer, we keep reference to a full tensor with data.
+        /// These informations are NOT intended to be mutable.
+        Tensor _payloadInfos;
     };
 
     union Att_value_t
@@ -109,7 +72,7 @@ namespace CyanMycelium
         TensorPtr t;
     };
 
-    /// @brief
+    /// @brief The base class for all nodes.
     class Node : public GraphItem
     {
     public:
@@ -118,61 +81,83 @@ namespace CyanMycelium
         }
         virtual ~Node() {}
 
-        LinkCollection Opsc;
-        LinkCollection Onsc;
+        /// @brief List of Incoming links.
+        Collection<Link *> Opsc;
+
+        /// @brief List of Outgoing links.
+        Collection<Link *> Onsc;
+
+        /// @brief Lock the node.
+        /// @param timeoutMillis
         void Lock(int timeoutMillis = CM_INFINITE) { _lock.Take(timeoutMillis); }
+
+        /// @brief Unlock the node.
         void Unlock() { _lock.Give(); }
 
-        // you may use attribute binding logic by name or index.
+        /// @brief Used to bind an attribute by name.
+        /// @param n the name of the attribute
+        /// @param value the value of the attribute
+        /// @return true if the attribute is bound and false otherwise.
         virtual bool TrySetAtt(const char *n, Att_value_t value) { return true; }
-        virtual bool TrySetAtt(int index, Att_value_t value) { return true; }
+
+        /// @brief Used to bind an attribute by index.
+        /// @param i the index of the attribute
+        /// @param value the value of the attribute
+        /// @return true if the attribute is bound and false otherwise.
+        virtual bool TrySetAtt(int i, Att_value_t value) { return true; }
 
     private:
+        /// @brief the lock used to protect the node.
         Mutex _lock;
     };
 
     typedef Node *NodePtr;
 
-    /// @brief
-    class NodeCollection : public Collection<NodePtr>
-    {
-    public:
-        NodeCollection(unsigned int initialCapacity = 2) : Collection<NodePtr>(initialCapacity)
-        {
-        }
-    };
-
-    /// @brief
+    /// @brief The base class for all operators.
     class Operator : public Node
     {
     public:
-        virtual bool Activate(IActivationCtxPtr ctx) = 0;
-        virtual bool CanModifyData() { return true; }
+        /// @brief the activation function
+        /// @param ctx  the activation context
+        /// @return true if the activation is successful and false otherwise.
+        virtual bool Activate(ActivationContext *ctx) = 0;
+
+        /// @brief return true if the operator is mutable, which mean it will change the input data
+        /// @return true if the operator is mutable and false otherwise.
+        virtual bool IsMutable() { return true; }
 
     protected:
-        bool _Forward(Tensor *, IActivationCtxPtr ctx);
+        /// @brief Push the outgoing result to the next operator by settting the payload of the outgoing link.
+        /// @param output the outgoing link
+        /// @param ctx the activation context
+        /// @return true if the activation is successful and false otherwise.
+        bool _forward(Tensor *output, ActivationContext *ctx);
     };
 
     typedef Operator *OperatorPtr;
+
+    typedef void (*UnaryFunctionPtr)(Tensor *, Tensor *, UnaryOperator *);
 
     /// @brief
     class UnaryOperator : public Operator
     {
     public:
         UnaryOperator(const UnaryFunctionPtr typedFn[TDT_COUNT]) : Operator() { _typedFn = typedFn; }
-        bool Activate(IActivationCtxPtr ctx) override;
+        bool Activate(ActivationContext *ctx) override;
 
     protected:
         const UnaryFunctionPtr *_typedFn;
     };
     typedef UnaryOperator *UnaryOperatorPtr;
 
+    typedef void (*BinaryFunctionPtr)(Tensor *, Tensor *, Tensor *, BinaryOperator *);
+
     /// @brief
     class BinaryOperator : public Operator
     {
     public:
         BinaryOperator(const BinaryFunctionPtr typedFn[TDT_COUNT]) : Operator() { this->_typedFn = typedFn; }
-        bool Activate(IActivationCtxPtr ctx) override;
+        bool Activate(ActivationContext *ctx) override;
 
     protected:
         const BinaryFunctionPtr *_typedFn;
@@ -197,16 +182,15 @@ namespace CyanMycelium
         }
         ~Graph() {}
 
-        /// @brief NULL terminated list of nodes.
+        /// @brief list of nodes.
+        Collection<Operator *> Nodes;
+        /// @brief list of links.
+        Collection<Link *> Links;
 
-        NodeCollection Nodes;
-        /// @brief NULL terminated list of links.
-        LinkCollection Links;
+        KeyValueCollection<Link *> Inputs;
+        KeyValueCollection<Link *> Outputs;
 
-        KeyValueCollection<LinkPtr> Inputs;
-        KeyValueCollection<LinkPtr> Outputs;
-
-        bool Activate(IActivationCtxPtr ctx) override;
+        bool Activate(ActivationContext *ctx) override;
     };
     typedef Graph *GraphPtr;
 }

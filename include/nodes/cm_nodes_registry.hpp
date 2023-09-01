@@ -6,15 +6,15 @@
 namespace CyanMycelium
 {
 #define CM_NODE_REGISTRY_INITIAL_CAPACITY 128
-#define __REGISTER__NODE(n) _types.Set(#n, []() -> NodePtr { return new n(); })
+#define __REGISTER__NODE(n) _types.Set(#n, []() -> Operator * { return new n(); })
 
-    typedef NodePtr (*NodeInitializer_fn)();
+    typedef Operator *(*NodeInitializer_fn)();
 
     class NodeRegistry
     {
     public:
         NodeRegistry(int initialCapacity = CM_NODE_REGISTRY_INITIAL_CAPACITY);
-        static NodePtr ForName(const char *);
+        static Operator *ForName(const char *);
 
     private:
         static NodeRegistry __Shared;

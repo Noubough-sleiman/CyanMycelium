@@ -197,7 +197,7 @@ bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
     reader->restore();
 
     // reach this point we might create the node using the type_name
-    Node *n = _createNode(cache);
+    Operator *n = _createNode(cache);
     if (!n)
     {
         SET_ERROR_1(ONNX_GB_UNSUPPORTED_NODE, cache)
@@ -313,13 +313,7 @@ bool OnnxGraphBuilder ::_readValueInfos(char *cache, BlueSteelLadyBug ::PBReader
         // inputs and outputs of the top-level graph.
         case VINFOS_TYPE_FIELD_NUMBER:
         {
-            if (link->Payload.Data != nullptr)
-            {
-                // this mean we had a previous initializer, then the tensor must be already set.
-                __READ(reader->skip(), return false)
-                continue;
-            }
-            // read the dercription to set the tensor.
+            // read the description to set the tensor.
             // NOTE : Avoid creating a sub reader by using position based parse pattern
             lb_uint64_t length;
             __READ(reader->readLength(&length, false), return false)
@@ -333,7 +327,7 @@ bool OnnxGraphBuilder ::_readValueInfos(char *cache, BlueSteelLadyBug ::PBReader
                 {
                 case TYPE_TENSOR_TYPE_FIELD_NUMBER:
                 {
-                    READ_SUB_MESSAGE(reader, READ_FUNC_1(_readTensorType, &link->Payload), return false)
+                    READ_SUB_MESSAGE(reader, READ_FUNC_1(_readTensorType, link->GetPayloadInfos()), return false)
                     continue;
                 }
                 default:
@@ -417,7 +411,7 @@ bool OnnxGraphBuilder ::_readInitializer(char *cache, BlueSteelLadyBug ::PBReade
                 goto _error;
             }
             // initialize..
-            link->Payload = t;
+            link->SetPayloadInfos(t.Shape, t.Dimension, t.Type, t.Data);
             break;
         }
         case TENSOR_RAW_DATA_FIELD_NUMBER:
@@ -445,7 +439,7 @@ _error:
     return false;
 }
 
-bool OnnxGraphBuilder ::_readTensorType(Tensor *t, BlueSteelLadyBug ::PBReader *reader)
+bool OnnxGraphBuilder ::_readTensorType(TensorInfos *t, BlueSteelLadyBug ::PBReader *reader)
 {
     lb_uint32_t type;
     while (reader->readTag())
@@ -473,7 +467,7 @@ bool OnnxGraphBuilder ::_readTensorType(Tensor *t, BlueSteelLadyBug ::PBReader *
     return true;
 }
 
-bool OnnxGraphBuilder ::_readTensorShape(Tensor *t, BlueSteelLadyBug ::PBReader *reader)
+bool OnnxGraphBuilder ::_readTensorShape(TensorInfos *t, BlueSteelLadyBug ::PBReader *reader)
 {
     lb_uint64_t shape[TENSOR_MAX_DIMENSION];
     int count = 0;
@@ -523,7 +517,7 @@ bool OnnxGraphBuilder ::_readTensorShape(Tensor *t, BlueSteelLadyBug ::PBReader 
     return true;
 }
 
-Node *OnnxGraphBuilder ::_createNode(const char *typeName)
+Operator *OnnxGraphBuilder ::_createNode(const char *typeName)
 {
     return NodeRegistry ::ForName(typeName);
 }
@@ -539,6 +533,7 @@ Link *OnnxGraphBuilder ::_getOrCreateLink(const char *name)
     if (!l)
     {
         l = this->_createLink();
+        l->Id = this->_links.Count();
         this->_links.Set(name, l);
     }
     return l;

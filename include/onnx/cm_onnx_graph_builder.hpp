@@ -28,7 +28,7 @@ namespace CyanMycelium
 
     private:
         BlueSteelLadyBug ::PBReader *_reader;
-        NodeCollection _nodes;
+        Collection<Operator *> _nodes;
         KeyValueCollection<Link *> _links;
 
         int _error;
@@ -38,9 +38,9 @@ namespace CyanMycelium
         bool _readNode(char *, BlueSteelLadyBug ::PBReader *);
         bool _readValueInfos(char *, BlueSteelLadyBug ::PBReader *);
         bool _readInitializer(char *, BlueSteelLadyBug ::PBReader *);
-        bool _readTensorType(Tensor *, BlueSteelLadyBug ::PBReader *);
-        bool _readTensorShape(Tensor *, BlueSteelLadyBug ::PBReader *);
-        Node *_createNode(const char *);
+        bool _readTensorType(TensorInfos *, BlueSteelLadyBug ::PBReader *);
+        bool _readTensorShape(TensorInfos *, BlueSteelLadyBug ::PBReader *);
+        Operator *_createNode(const char *);
         Link *_createLink();
         Link *_getOrCreateLink(const char *);
         virtual void *_malloc(size_t s) { return cm_malloc(s); }
