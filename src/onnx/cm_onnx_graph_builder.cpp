@@ -91,6 +91,7 @@ Graph *OnnxGraphBuilder ::Build(Graph *target)
             if (this->_reader->getFieldNumber() == GRAPH_FIELD_NUMBER)
             {
                 READ_SUB_MESSAGE(this->_reader, READ_FUNC_0(_readGraph), goto _error)
+                continue;
             }
             __READ(this->_reader->skip(), goto _error);
         }
@@ -151,7 +152,16 @@ bool OnnxGraphBuilder ::_readGraph(PBReader *reader)
         }
         // The inputs and outputs of the graph.
         case (INPUT_FIELD_NUMBER):
+        {
+            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readValueInfos, cache), goto _error)
+            continue;
+        }
+
         case (OUTPUT_FIELD_NUMBER):
+        {
+            READ_SUB_MESSAGE(reader, READ_FUNC_1(_readValueInfos, cache), goto _error)
+            continue;
+        }
             // Information for the values in the graph. The ValueInfoProto.name's
             // must be distinct. It is optional for a value to appear in value_info list.
         case (VALUE_INFO_FIELD_NUMBER):
@@ -354,6 +364,7 @@ bool OnnxGraphBuilder ::_readValueInfos(char *cache, BlueSteelLadyBug ::PBReader
     if (reader->getWireType() == PB_LEN)            \
     {                                               \
         __READ(reader->readPacked(d), goto _error); \
+        continue;                                   \
     }                                               \
     __READ(reader->readValue(d + i++), goto _error);
 
@@ -479,6 +490,11 @@ bool OnnxGraphBuilder ::_readTensorShape(TensorInfos *t, BlueSteelLadyBug ::PBRe
         {
             lb_uint64_t length;
             __READ(reader->readLength(&length, false), return false)
+            if (length == 0)
+            {
+                // this mean an invalid shape but we do not want to stop the parsing.
+                continue;
+            }
             lb_uint64_t end = reader->getPosition() + length;
             do
             {
@@ -489,7 +505,14 @@ bool OnnxGraphBuilder ::_readTensorShape(TensorInfos *t, BlueSteelLadyBug ::PBRe
                 {
                     if (count < TENSOR_MAX_DIMENSION)
                     {
-                        __READ(reader->readValue(shape + count), return false)
+                        //__READ(reader->readValue(shape + count), return false)
+
+                        if (!reader->readValue(shape + count))
+                        {
+                            this->_error = 200;
+                            return false;
+                        }
+
                         count++;
                         continue;
                     }
