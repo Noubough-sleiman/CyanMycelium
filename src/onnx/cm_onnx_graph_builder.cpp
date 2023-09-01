@@ -194,12 +194,7 @@ bool OnnxGraphBuilder ::_readNode(char *cache, PBReader *reader)
     {
         if (reader->getFieldNumber() == NODE_TYPE_FIELD_NUMBER)
         {
-            //__READ(reader->readValue_s(cache, CM_KEY_MAX_LENGTH), goto _error_label)
-            if (!reader->readValue_s(cache, 128))
-            {
-                this->_error = 200;
-                return false;
-            }
+            __READ(reader->readValue_s(cache, CM_KEY_MAX_LENGTH), return false)
             break;
         }
         __READ(reader->skip(), return false)
