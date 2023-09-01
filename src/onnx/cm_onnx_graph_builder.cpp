@@ -492,8 +492,12 @@ bool OnnxGraphBuilder ::_readTensorShape(TensorInfos *t, BlueSteelLadyBug ::PBRe
             __READ(reader->readLength(&length, false), return false)
             if (length == 0)
             {
-                // this mean an invalid shape but we do not want to stop the parsing.
-                continue;
+                // In ONNX, when you encounter a dimension (dim) that is empty or has a size of 0 within the valueInfo for an output,
+                // it typically signifies that the dimension size is unknown or variable at the graph's construction time.
+                // This is often used when the exact size of the dimension depends on runtime factors or dynamic input data,
+                // and it's not predetermined during the graph's creation.
+                SET_ERROR_0(ONNX_GB_UNSUPPORTED_TENSOR_UNKNOWN_DIM);
+                return false;
             }
             lb_uint64_t end = reader->getPosition() + length;
             do
@@ -505,14 +509,7 @@ bool OnnxGraphBuilder ::_readTensorShape(TensorInfos *t, BlueSteelLadyBug ::PBRe
                 {
                     if (count < TENSOR_MAX_DIMENSION)
                     {
-                        //__READ(reader->readValue(shape + count), return false)
-
-                        if (!reader->readValue(shape + count))
-                        {
-                            this->_error = 200;
-                            return false;
-                        }
-
+                        __READ(reader->readValue(shape + count), return false)
                         count++;
                         continue;
                     }
