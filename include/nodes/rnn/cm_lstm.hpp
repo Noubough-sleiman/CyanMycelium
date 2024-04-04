@@ -23,15 +23,15 @@ namespace CyanMycelium
     TensorRef *X(ActivationContext *ctx) { return ctx->GetPayloadRef(this->Opsc[LSTM_X_INDEX]->Id); }
 
     /// @brief Weight matrix for the input data.
-    /// @return corresponding tensor reference
+    /// @return corresponding tensor
     Tensor *W() { return this->Opsc[LSTM_W_INDEX]->GetPayloadInfos(); }
 
     /// @brief Weight matrix for the recurrent connections.
-    /// @return corresponding tensor reference
+    /// @return corresponding tensor
     Tensor *R() { return this->Opsc[LSTM_R_INDEX]->GetPayloadInfos(); }
 
     /// @brief Biases for the LSTM gates.
-    /// @return corresponding tensor reference
+    /// @return corresponding tensor
     Tensor *B() { return this->Opsc[LSTM_B_INDEX]->GetPayloadInfos(); }
 
     /// @brief  Performs forward propagation for the LSTM node.

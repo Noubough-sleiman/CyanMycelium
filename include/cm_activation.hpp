@@ -82,9 +82,9 @@ namespace CyanMycelium
     };
 
     /// @brief ActivationContext is the context of the inference session. Each time we analyze an input, the inference session is supported with
-    /// an ActivationContext. The ActivationContext is responsible to hold the tensor references, value and the memory manager.
+    /// an ActivationContext. The ActivationContext is responsible to hold the tensor references, values and the memory manager.
     /// The ActivationContext is also responsible to activate and deactivate the links and operators.
-    /// Thanks to this, the Graph is totally stateless and is only the suppport for the topology.
+    /// Thanks to this approach, the Graph is totally stateless and is only the suppport for the topology.
     class ActivationContext
     {
     public:
