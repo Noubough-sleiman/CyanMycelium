@@ -33,26 +33,38 @@ void InferenceEngine::Join()
   _lock.Take();
   if (_started)
   {
-    for (int i = 0; i < _options.ThreadCount; ++i)
+    int count = this->_options.ThreadCount;
+    ThreadPtr *copy = new ThreadPtr[count];
+    for (int i = 0; i < count; i++)
     {
-      if (_threads[i] && _threads[i]->joinable())
+      copy[i] = _threads[i];
+    }
+    _lock.Give();
+    for (int i = 0; i < count; ++i)
+    {
+      if (copy[i] && copy[i]->joinable())
       {
-        _threads[i]->join();
-        delete _threads[i]; // Clean up the thread pointer
-        _threads[i] = nullptr;
+        copy[i]->join();
       }
     }
-    delete[] _threads; // Clean up the array of thread pointers
-    _threads = nullptr;
-    _started = false;
   }
-  _lock.Give();
+  else
+  {
+    _lock.Give();
+  }
 }
 
 void InferenceEngine ::Stop()
 {
-  _started = false;
-  Join();
+  ActivationEvent e = {CM_ACTIVATION_STOP, nullptr, nullptr};
+  // we need to send a stop event to every threads
+  for (int i = 0; i < _options.ThreadCount; i++)
+  {
+    if (!this->_queue.Send(&e))
+    {
+      // log error
+    }
+  }
 }
 
 bool InferenceEngine ::IsStarted()
@@ -92,6 +104,15 @@ void InferenceEngine ::Consume(ActivationEvent &e)
     {
       context->ActivationContext::Activate(node);
     }
+    break;
+  }
+  case CM_ACTIVATION_STOP:
+  {
+    _lock.Take();
+    delete[] _threads; // Clean up the array of thread pointers
+    _threads = nullptr;
+    _started = false;
+    _lock.Give();
     break;
   }
   default:

@@ -13,7 +13,7 @@ namespace CyanMycelium
   {
     CM_ACTIVATION_LINK,
     CM_ACTIVATION_NODE,
-    CM_ACTIVATION_OUTPUT
+    CM_ACTIVATION_STOP
   };
 
   struct ActivationEvent

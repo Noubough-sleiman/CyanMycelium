@@ -32,6 +32,11 @@ namespace CyanMycelium
             Count = 0;
             Flags.Value = 0;
         }
+
+        ~TensorRef()
+        {
+        }
+
         Tensor Value; // the tensor value
         int Count;    // the number of links using this tensor
         union
@@ -192,10 +197,12 @@ namespace CyanMycelium
         /// @return true if the operation is successful, false otherwise.
         virtual bool Forward(Link *l);
 
+        LinkState *_states; // tensor references
+
     private:
         InferenceEngine *_engine; // the inference engine
         Graph *_model;            // the model
-        LinkState *_states;       // tensor references
+
         ActivationContextHandlers *_handlers;
 
         /// @brief Build the tensor references at construct time

@@ -10,25 +10,13 @@ void ActivationContext ::SetOutput(const char *name, void *buffer) { this->_bind
 Tensor *ActivationContext ::GetInput(const char *name)
 {
     Link *l = this->GetModel()->Inputs[name];
-    if (l)
-    {
-        LinkState state = this->_states[l->Id];
-        TensorRef *ref = state.Ref;
-        return ref ? &ref->Value : nullptr;
-    }
-    return nullptr;
+    return this->_get(l);
 }
 
 Tensor *ActivationContext ::GetOutput(const char *name)
 {
     Link *l = this->GetModel()->Outputs[name];
-    if (l)
-    {
-        LinkState state = this->_states[l->Id];
-        TensorRef *ref = state.Ref;
-        return ref ? &ref->Value : nullptr;
-    }
-    return nullptr;
+    return this->_get(l);
 }
 
 void *ActivationContext ::Clone(void *ptr, const size_t size, int heap_id)
@@ -212,14 +200,24 @@ void ActivationContext::_buildTensorRefs()
 
 void ActivationContext::_clearTensorRefs()
 {
-    for (int i = 0; i != this->_model->Links.Count(); i++)
+    int count = this->_model->Links.Count();
+    for (int i = 0; i != count; i++)
     {
-        TensorRefPtr ref = this->_states[i].Ref;
+        TensorRef *ref = this->_states[i].Ref;
         if (ref)
         {
             if (ref->Flags.Bits.Internal)
             {
                 this->Free(ref->Value.Data);
+            }
+            // we assume we may have copy of the tensor
+            // so we need to check if the tensor is not shared
+            for (int j = i + 1; j != count; j++)
+            {
+                if (this->_states[j].Ref == ref)
+                {
+                    this->_states[j].Ref = nullptr;
+                }
             }
             delete ref;
         }

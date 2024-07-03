@@ -41,13 +41,14 @@ int main()
 
         OnnxGraphBuilder builder;
         Graph *graph = builder.WithReader(reader).Build();
+        delete input;
+        delete reader;
         if (!graph)
         {
             std::cerr << "Failed to build graph: code [" << builder.GetError() << "]:" << builder.GetErrorInfos() << std::endl;
-            delete input;
-            delete reader;
             return 0;
         }
+
         // declare the engine options with default values
         InferenceEngineOptions options;
 
@@ -67,20 +68,18 @@ int main()
         AsyncActivationContext *session = engine->CreateSession(graph, &handlers);
 
         // create the input data
-        float data[1] = {-1.0f};
+        float *data = new float[1];
+        data[0] = 1.0f;
         std::cout << "Input: " << data[0] << std::endl;
 
         session->SetInput("input", data);
-        session->SetOutput("output", data);
 
         if (!session->Run())
         {
             std::cerr << "Failed to run inference" << std::endl;
-            delete engine;
             delete session;
             delete graph;
-            delete input;
-            delete reader;
+            delete engine;
             return 0;
         }
 
@@ -88,11 +87,9 @@ int main()
         engine->Join();
 
         // cleanup
-        delete engine;
         delete session;
         delete graph;
-        delete input;
-        delete reader;
+        delete engine;
     }
     return 0;
 }
