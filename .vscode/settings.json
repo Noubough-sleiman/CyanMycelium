@@ -55,7 +55,8 @@
     "mutex": "cpp",
     "condition_variable": "cpp",
     "deque": "cpp",
-    "thread": "cpp"
+    "thread": "cpp",
+    "iostream": "cpp"
   },
   "C_Cpp.errorSquiggles": "enabled"
 }

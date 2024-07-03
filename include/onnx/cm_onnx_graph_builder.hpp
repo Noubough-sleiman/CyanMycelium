@@ -26,6 +26,8 @@ namespace CyanMycelium
         OnnxGraphBuilder &WithReader(BlueSteelLadyBug ::PBReader *);
 
         Graph *Build(Graph *target = nullptr);
+        int GetError() { return _error; }
+        const char *GetErrorInfos() { return _errorInfos; }
 
     private:
         BlueSteelLadyBug ::PBReader *_reader;

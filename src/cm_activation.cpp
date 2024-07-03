@@ -1,28 +1,63 @@
 #include "cm_graph.hpp"
+#include "cm_engine.hpp"
+
 using namespace CyanMycelium;
+
+void ActivationContext ::SetInput(const char *name, void *buffer) { this->_bind(this->GetModel()->Inputs[name], buffer); }
+
+void ActivationContext ::SetOutput(const char *name, void *buffer) { this->_bind(this->GetModel()->Outputs[name], buffer); }
+
+Tensor *ActivationContext ::GetInput(const char *name)
+{
+    Link *l = this->GetModel()->Inputs[name];
+    if (l)
+    {
+        LinkState state = this->_states[l->Id];
+        TensorRef *ref = state.Ref;
+        return ref ? &ref->Value : nullptr;
+    }
+    return nullptr;
+}
+
+Tensor *ActivationContext ::GetOutput(const char *name)
+{
+    Link *l = this->GetModel()->Outputs[name];
+    if (l)
+    {
+        LinkState state = this->_states[l->Id];
+        TensorRef *ref = state.Ref;
+        return ref ? &ref->Value : nullptr;
+    }
+    return nullptr;
+}
+
+void *ActivationContext ::Clone(void *ptr, const size_t size, int heap_id)
+{
+    return this->_engine->GetMemoryManager()->Clone(ptr, size, heap_id);
+}
+
+void *ActivationContext ::Malloc(const size_t size, int heap_id)
+{
+    return this->_engine->GetMemoryManager()->Malloc(size, heap_id);
+}
+
+void *ActivationContext ::Realloc(void *ptr, const size_t size, int heap_id)
+{
+    return this->_engine->GetMemoryManager()->Realloc(ptr, size, heap_id);
+}
+
+void ActivationContext ::Free(void *ptr, int heap_id)
+{
+    this->_engine->GetMemoryManager()->Free(ptr, heap_id);
+}
 
 TensorRefPtr ActivationContext::CloneRef(TensorRef &other)
 {
     TensorRefPtr t = new TensorRef(other);
     t->Flags.Bits.Internal = 1;
-    t->Value.Data = this->_mm->Malloc(t->Value.Size);
+    t->Value.Data = this->Malloc(t->Value.Size);
     cm_memcpy(t->Value.Data, other.Value.Data, t->Value.Size);
     return t;
-}
-
-void ActivationContext ::_bind(Link *l, void *buffer)
-{
-    if (l)
-    {
-        LinkState state = this->_states[l->Id];
-        TensorRef *ref = state.Ref;
-        if (!ref)
-        {
-            ref = new TensorRef(*l->GetPayloadInfos());
-            this->_states[l->Id].Ref = ref;
-        }
-        ref->Value.Data = buffer;
-    }
 }
 
 bool ActivationContext ::Run()
@@ -44,7 +79,7 @@ bool ActivationContext::Forward(Operator *op, TensorRefPtr outputValue)
     int count = op->Opsc.Count();
     for (int i = 0; i != count; i++)
     {
-        Link * link = op->Opsc[i];
+        Link *link = op->Opsc[i];
         this->Deactivate(link);
     }
 
@@ -54,7 +89,7 @@ bool ActivationContext::Forward(Operator *op, TensorRefPtr outputValue)
     for (int i = 0; i != count; i++)
     {
         TensorRefPtr tensor = outputValue;
-        Link * link = op->Onsc[i];
+        Link *link = op->Onsc[i];
         if (tensor->Flags.Bits.ReadOnly || tensor->Count > 1)
         {
             OperatorPtr nextOp = link->Ofin;
@@ -89,11 +124,11 @@ bool ActivationContext::Forward(Link *l)
         // we need to synchronize and potentially activate the node
         nextNode->Lock();
         // we check if the node is ready to be activated
-        Collection<Link*> &inputs = nextNode->Opsc;
+        Collection<Link *> &inputs = nextNode->Opsc;
         int count = inputs.Count();
         for (int i = 0; i != count; ++i)
         {
-            Link * l = inputs[i];
+            Link *l = inputs[i];
             if (!this->_states[l->Id].Flags.Bits.Activ)
             {
                 // one of the input is not ready, so we do nothing
@@ -108,6 +143,7 @@ bool ActivationContext::Forward(Link *l)
     // this is a terminal link
     KeyValueCollection<Link *> &outputs = this->_model->Outputs;
     int count = outputs.Count();
+    boolean ended = true;
     for (int i = 0; i != count; ++i)
     {
         KeyValue<Link *> entry = outputs[i];
@@ -115,14 +151,24 @@ bool ActivationContext::Forward(Link *l)
         if (!this->_states[l->Id].Flags.Bits.Activ)
         {
             // one of the input is not ready, so we do nothing
-            return true;
+            ended = false;
+        }
+        if (this->_handlers->OnOutputReady)
+        {
+            this->_handlers->OnOutputReady(this, entry.Key, l->GetPayloadInfos(), this->_handlers->UserData);
         }
     }
-    // messaging the output ready
-    return this->OnOutputReady();
+    if (ended)
+    {
+        if (this->_handlers->OnEnded)
+        {
+            this->_handlers->OnEnded(this, this->_handlers->UserData);
+        }
+    }
+    return true;
 }
 
-bool ActivationContext ::Activate(Link * l, TensorRefPtr tensor)
+bool ActivationContext ::Activate(Link *l, TensorRefPtr tensor)
 {
     LinkState *state = this->_states + l->Id;
     state->Flags.Bits.Activ = 1;
@@ -138,7 +184,7 @@ bool ActivationContext ::Activate(Link * l, TensorRefPtr tensor)
     return Forward(l);
 }
 
-bool ActivationContext ::Deactivate(Link * l)
+bool ActivationContext ::Deactivate(Link *l)
 {
     LinkState *state = this->_states + l->Id;
     state->Flags.Bits.Activ = 0;
@@ -155,10 +201,6 @@ bool ActivationContext ::Activate(OperatorPtr node)
 {
     return node->Activate(this);
 }
-
-void ActivationContext ::BindInput(const char *name, void *buffer) { this->_bind(this->GetModel()->Inputs[name], buffer); }
-
-void ActivationContext ::BindOutput(const char *name, void *buffer) { this->_bind(this->GetModel()->Outputs[name], buffer); }
 
 void ActivationContext::_buildTensorRefs()
 {
@@ -177,10 +219,37 @@ void ActivationContext::_clearTensorRefs()
         {
             if (ref->Flags.Bits.Internal)
             {
-                this->_mm->Free(ref->Value.Data);
+                this->Free(ref->Value.Data);
             }
             delete ref;
         }
     }
     delete[] this->_states;
+}
+
+void ActivationContext ::_bind(Link *l, void *buffer)
+{
+    if (l)
+    {
+        LinkState state = this->_states[l->Id];
+        TensorRef *ref = state.Ref;
+        if (!ref)
+        {
+            Tensor *infos = l->GetPayloadInfos();
+            ref = new TensorRef(*infos);
+            this->_states[l->Id].Ref = ref;
+        }
+        ref->Value.Data = buffer;
+    }
+}
+
+Tensor *ActivationContext ::_get(Link *l)
+{
+    if (l)
+    {
+        LinkState state = this->_states[l->Id];
+        TensorRef *ref = state.Ref;
+        return ref ? &ref->Value : nullptr;
+    }
+    return nullptr;
 }

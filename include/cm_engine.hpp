@@ -1,6 +1,7 @@
 #ifndef __CM_ENGINE__
 #define __CM_ENGINE__
 
+#include "memory/cm_memory_manager.hpp"
 #include "cm_session.hpp"
 #include "concurrent/cm_task.hpp"
 
@@ -20,20 +21,36 @@ namespace CyanMycelium
     int StackSize = CM_DEFAULT_CQ_STACKSIZE;
     Thread ::Priority Priority = CM_DEFAULT_CQ_PRIORITY;
     IRunnable *Runtime = nullptr;
+    IMemoryManagerPtr MemoryManager = nullptr;
   };
 
   class InferenceEngine : IRunnable
   {
   public:
-    InferenceEngine(InferenceEngineOptions options) : _queue(options.QueueCapacity, sizeof(ActivationEvent)), _lock()
+    InferenceEngine(InferenceEngineOptions options, boolean autoStart = true) : _queue(options.QueueCapacity, sizeof(ActivationEvent)), _lock()
     {
       _options = options;
+      if (autoStart)
+      {
+        this->Start();
+      }
     };
 
-    AsyncActivationContext *CreateSession(GraphPtr model, IMemoryManagerPtr memoryManager);
+    virtual ~InferenceEngine()
+    {
+      Stop();
+    };
+
+    IMemoryManagerPtr GetMemoryManager()
+    {
+      return _options.MemoryManager ? _options.MemoryManager : &MemoryManagerBase::Shared();
+    };
+
+    AsyncActivationContext *CreateSession(GraphPtr model, ActivationContextHandlersPtr handlers = nullptr);
     void Start();
     void Stop();
     bool IsStarted();
+    void Join();
 
     unsigned long Run(void *) override;
     void Consume(ActivationEvent &e);

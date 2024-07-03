@@ -26,16 +26,13 @@ namespace CyanMycelium
   class AsyncActivationContext : public ActivationContext
   {
   public:
-    AsyncActivationContext(GraphPtr model, IMemoryManagerPtr mm, Queue *queue) : ActivationContext(model, mm)
+    AsyncActivationContext(InferenceEngine *engine, GraphPtr model, Queue *queue, ActivationContextHandlersPtr handlers = nullptr) : ActivationContext(engine, model, handlers)
     {
       _queue = queue;
     };
 
-    void AwaitOutputs(int timeout = CM_INFINITE);
-
   protected:
     bool Activate(OperatorPtr) override;
-    bool OnOutputReady() override;
 
   private:
     Queue *_queue;

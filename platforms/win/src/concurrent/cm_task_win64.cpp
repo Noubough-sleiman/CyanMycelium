@@ -54,3 +54,19 @@ Thread ::~Thread()
         CloseHandle(_handle);
     }
 };
+
+bool Thread ::joinable() const
+{
+    return _handle != nullptr && !_joined && WaitForSingleObject(_handle, 0) == WAIT_TIMEOUT;
+}
+
+void Thread ::join()
+{
+    if (_handle != nullptr && !_joined)
+    {
+        WaitForSingleObject(_handle, INFINITE);
+        _joined = true;
+        CloseHandle(_handle);
+        _handle = nullptr;
+    }
+}

@@ -3,6 +3,12 @@
 
 using namespace CyanMycelium;
 
+MemoryManagerBase &MemoryManagerBase::Shared()
+{
+  static MemoryManagerBase instance;
+  return instance;
+}
+
 void *MemoryManagerBase ::Clone(void *ptr, const size_t size, int heap_id)
 {
   void *copy = this->Malloc(size, heap_id);

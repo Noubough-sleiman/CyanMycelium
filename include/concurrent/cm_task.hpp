@@ -20,6 +20,7 @@ namespace CyanMycelium
             IRunnable *Target;
         };
         cm_thread_t _handle;
+        bool _joined;
 
     public:
         enum class Priority
@@ -40,6 +41,9 @@ namespace CyanMycelium
 
         Thread(IRunnable *target, int stackSize, void *param, Priority p = Priority::LOW);
         ~Thread();
+
+        bool joinable() const;
+        void join();
     };
 
     typedef Thread *ThreadPtr;

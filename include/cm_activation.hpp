@@ -1,7 +1,6 @@
 #ifndef _CM_ACTIVATION_
 #define _CM_ACTIVATION_
 
-#include "memory/cm_memory_manager.hpp"
 #include "math/cm_tensor.hpp"
 #include "concurrent/cm_concurrent.hpp"
 
@@ -10,7 +9,10 @@ namespace CyanMycelium
     // forward declaration
     class Operator;
     class Link;
+    class Node;
     class Graph;
+    class InferenceEngine;
+    class ActivationContext;
 
     /// @brief TensorRef is the tensor reference used by the ActivationContext. This is a key element of the inference session.
     class TensorRef
@@ -81,6 +83,28 @@ namespace CyanMycelium
         } Flags;
     };
 
+    using HandlerFunction = void (*)(ActivationContext *ctx, void *userData);
+    using NodeHandlerFunction = void (*)(ActivationContext *ctx, Node *node, void *userData);
+    using OutputHandlerFunction = void (*)(ActivationContext *ctx, const char *name, Tensor *output, void *userData);
+
+    class ActivationContextHandlers
+    {
+    public:
+        void *UserData;
+        HandlerFunction OnStarted = nullptr;
+        NodeHandlerFunction OnNodeActivated = nullptr;
+        OutputHandlerFunction OnOutputReady = nullptr;
+        HandlerFunction OnEnded = nullptr;
+        HandlerFunction OnError = nullptr;
+
+        ActivationContextHandlers(void *userData = nullptr)
+        {
+            this->UserData = userData;
+        }
+    };
+
+    typedef ActivationContextHandlers *ActivationContextHandlersPtr;
+
     /// @brief ActivationContext is the context of the inference session. Each time we analyze an input, the inference session is supported with
     /// an ActivationContext. The ActivationContext is responsible to hold the tensor references, values and the memory manager.
     /// The ActivationContext is also responsible to activate and deactivate the links and operators.
@@ -92,27 +116,30 @@ namespace CyanMycelium
         /// @param model  the topology
         /// @param mm  the memory manager
         /// @return  the new ActivationContext object
-        ActivationContext(Graph *model, IMemoryManagerPtr mm)
+        ActivationContext(InferenceEngine *engine, Graph *model, ActivationContextHandlers *handlers = nullptr)
         {
+            this->_handlers = handlers;
+            this->_engine = engine;
             this->_model = model;
-            this->_mm = mm;
             _buildTensorRefs();
         }
 
         /// @brief Destroy the Activation Context object
         virtual ~ActivationContext() { _clearTensorRefs(); }
 
-        /// @brief Get the Memory Manager object
-        /// @return the memory manager
-        IMemoryManagerPtr GetMemoryManager() { return this->_mm; }
+        InferenceEngine *GetEngine() { return _engine; }
 
         /// @brief Get the Model object
         // @return the topology
         Graph *GetModel() { return _model; }
 
-        void BindInput(const char *name, void *buffer);
+        void SetInput(const char *name, void *buffer);
 
-        void BindOutput(const char *name, void *buffer);
+        void SetOutput(const char *name, void *buffer);
+
+        Tensor *GetInput(const char *name);
+
+        Tensor *GetOutput(const char *name);
 
         /// @brief Run the inference with the given input tensors.
         /// The input tensors are supposed to be binded previously with the input links.
@@ -165,13 +192,11 @@ namespace CyanMycelium
         /// @return true if the operation is successful, false otherwise.
         virtual bool Forward(Link *l);
 
-        /// @brief Called when the outputs are ready.
-        virtual bool OnOutputReady() { return true; }
-
     private:
-        IMemoryManagerPtr _mm; // the memory manager
-        Graph *_model;         // the model
-        LinkState *_states;    // tensor references
+        InferenceEngine *_engine; // the inference engine
+        Graph *_model;            // the model
+        LinkState *_states;       // tensor references
+        ActivationContextHandlers *_handlers;
 
         /// @brief Build the tensor references at construct time
         virtual void _buildTensorRefs();
@@ -180,6 +205,12 @@ namespace CyanMycelium
         virtual void _clearTensorRefs();
 
         void _bind(Link *link, void *buffer);
+        Tensor *_get(Link *l);
+
+        void *Clone(void *ptr, const size_t size, int heap_id = 0);
+        void *Malloc(const size_t size, int heap_id = 0);
+        void *Realloc(void *ptr, const size_t size, int heap_id = 0);
+        void Free(void *ptr, int heap_id = 0);
     };
 }
 #endif

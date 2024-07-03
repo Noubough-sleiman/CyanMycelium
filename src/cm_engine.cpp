@@ -2,9 +2,13 @@
 
 using namespace CyanMycelium;
 
-AsyncActivationContext *InferenceEngine ::CreateSession(GraphPtr model, IMemoryManagerPtr memoryManager)
+AsyncActivationContext *InferenceEngine ::CreateSession(GraphPtr model, ActivationContextHandlersPtr handlers)
 {
-  return new AsyncActivationContext(model, memoryManager, &_queue);
+  if (!model)
+  {
+    return nullptr;
+  }
+  return new AsyncActivationContext(this, model, &(this->_queue), handlers);
 }
 
 void InferenceEngine ::Start()
@@ -24,9 +28,31 @@ void InferenceEngine ::Start()
   _lock.Give();
 }
 
+void InferenceEngine::Join()
+{
+  _lock.Take();
+  if (_started)
+  {
+    for (int i = 0; i < _options.ThreadCount; ++i)
+    {
+      if (_threads[i] && _threads[i]->joinable())
+      {
+        _threads[i]->join();
+        delete _threads[i]; // Clean up the thread pointer
+        _threads[i] = nullptr;
+      }
+    }
+    delete[] _threads; // Clean up the array of thread pointers
+    _threads = nullptr;
+    _started = false;
+  }
+  _lock.Give();
+}
+
 void InferenceEngine ::Stop()
 {
   _started = false;
+  Join();
 }
 
 bool InferenceEngine ::IsStarted()
