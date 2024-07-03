@@ -2,7 +2,7 @@
 
 using namespace CyanMycelium;
 
-AsyncActivationContext *InferenceEngine ::CreateSession(GraphPtr model, ActivationContextHandlersPtr handlers)
+AsyncActivationContext *InferenceEngine ::CreateInferenceSession(GraphPtr model, ActivationContextHandlersPtr handlers)
 {
   if (!model)
   {

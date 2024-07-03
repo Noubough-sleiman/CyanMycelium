@@ -46,7 +46,7 @@ namespace CyanMycelium
       return _options.MemoryManager ? _options.MemoryManager : &MemoryManagerBase::Shared();
     };
 
-    AsyncActivationContext *CreateSession(GraphPtr model, ActivationContextHandlersPtr handlers = nullptr);
+    AsyncActivationContext *CreateInferenceSession(GraphPtr model, ActivationContextHandlersPtr handlers = nullptr);
     void Start();
     void Stop();
     bool IsStarted();

@@ -55,35 +55,35 @@ int main()
         // create the inference engine and start it
         InferenceEnginePtr engine = new InferenceEngine(options);
 
-        // define handlers
+        // define handlers -> here we only need to know when the inference ends
         ActivationContextHandlers handlers(engine);
         handlers.OnEnded = [](ActivationContext *context, void *userData)
         {
             std::cout << "Inference ended" << std::endl;
             std::cout << "Output is: " << ((float *)(context->GetOutput("output")->Data))[0] << std::endl;
+            // we stop the engine, then this will exit the main.
             context->GetEngine()->Stop();
         };
 
         // create the inference session
-        AsyncActivationContext *session = engine->CreateSession(graph, &handlers);
+        AsyncActivationContext *session = engine->CreateInferenceSession(graph, &handlers);
 
-        // create the input data
+        // create the input data (a single float)
         float *data = new float[1];
-        data[0] = 1.0f;
+        data[0] = -1.0f;
         std::cout << "Input: " << data[0] << std::endl;
 
+        // set the input data
         session->SetInput("input", data);
 
+        // start the inference
         if (!session->Run())
         {
             std::cerr << "Failed to run inference" << std::endl;
-            delete session;
-            delete graph;
-            delete engine;
-            return 0;
+            engine->Stop();
         }
 
-        // wait for the inference to end
+        // wait for the engine to end
         engine->Join();
 
         // cleanup
