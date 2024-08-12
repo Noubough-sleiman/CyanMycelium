@@ -2,6 +2,26 @@
 
 using namespace CyanMycelium;
 
+Graph *Graph ::Add(Link *l)
+{
+  if (l->Id < 0)
+  {
+    l->Id = this->Links.Count();
+  }
+  this->Links.Add(l);
+  return this;
+}
+
+Graph *Graph ::Add(Node *n)
+{
+  if (n->Id < 0)
+  {
+    n->Id = this->Nodes.Count();
+  }
+  this->Nodes.Add((OperatorPtr &)n);
+  return this;
+}
+
 bool Link ::Activate(ActivationContext *ctx)
 {
   return true;

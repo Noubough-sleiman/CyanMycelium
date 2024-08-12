@@ -30,7 +30,7 @@ namespace CyanMycelium
     class Link : public GraphItem
     {
     public:
-        Link() : Link(nullptr, 1){};
+        Link() : Link(nullptr, 1) {};
         Link(const uint64_t *shape, int dimension, tensor_data_type_t type = TDT_UNDEFINED) : _payloadInfos(shape, dimension, type)
         {
             Oini = nullptr;
@@ -190,6 +190,8 @@ namespace CyanMycelium
         KeyValueCollection<Link *> Inputs;
         KeyValueCollection<Link *> Outputs;
 
+        Graph *Add(Link *);
+        Graph *Add(Node *);
         bool Activate(ActivationContext *ctx) override;
     };
     typedef Graph *GraphPtr;

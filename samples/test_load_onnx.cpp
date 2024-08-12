@@ -4,6 +4,7 @@
 #include "onnx/cm_onnx_graph_builder.hpp"
 #include "pb/lb_memory_stream.hpp"
 #include "cm_engine.hpp"
+#include "nodes/unary/cm_unary.hpp"
 
 using namespace BlueSteelLadyBug;
 using namespace CyanMycelium;
@@ -28,7 +29,7 @@ char *ReadFileIntoMemory(const char *filename, size_t *fileSize)
     return buffer;
 }
 
-int main()
+int __main()
 {
     const char *filename = "C:/Users/guill/Documents/sources/cyanmycelium/models/abs/abs.onnx";
     size_t fileSize;
